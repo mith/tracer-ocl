@@ -1,0 +1,105 @@
+#include "Tracer.h"
+
+Tracer::Tracer()
+{
+    std::vector<cl::Platform> all_platforms;
+    cl::Platform::get(&all_platforms);
+
+    for (auto & platform : all_platforms) {
+        std::cout << platform.getInfo<CL_PLATFORM_NAME>()
+                  << std::endl;
+    }
+
+    cl::Platform default_platform = all_platforms[0];
+    std::cout << "Using platform: "
+              << default_platform.getInfo<CL_PLATFORM_NAME>()
+              << std::endl;
+
+    std::vector<cl::Device> all_devices;
+    default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+
+    for (auto & device : all_devices) {
+        std::cout << device.getInfo<CL_DEVICE_NAME>()
+                  << std::endl;
+    }
+
+    device = all_devices[2];
+    std::cout << "Using device: "
+              << device.getInfo<CL_DEVICE_NAME>()
+              << std::endl;
+
+    cl_context_properties properties[] {
+        CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
+        (cl_context_properties) CGLGetShareGroup(CGLGetCurrentContext()),
+        0
+    };
+
+    context = cl::Context(device, properties, clLogMessagesToStdoutAPPLE);
+    queue = cl::CommandQueue(context, device);
+
+    scene = std::make_unique<Scene>(context, device, queue);
+}
+
+std::unique_ptr<std::string> file_str (std::string filename)
+{
+    std::ifstream txt_file(filename);
+    std::stringstream txt_buf;
+    txt_buf << txt_file.rdbuf();
+    return std::make_unique<std::string>(txt_buf.str());
+}
+
+void Tracer::load_kernels()
+{
+    cl::Program::Sources sources;
+
+    for (auto & flnm : kernel_filenames) {
+        auto src = file_str(flnm);
+        sources.push_back({src->c_str(), src->length()});
+    }
+
+    program = cl::Program(context, sources);
+    if (program.build({device}, "-I ./kernels/") != CL_SUCCESS) {
+        std::cerr << "error building: "
+                  << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
+                  << std::endl;
+    }
+    tracer_krnl = cl::Kernel(program, "tracer");
+
+    tracer_krnl.setArg(1, scene->lightsBuffer);
+    tracer_krnl.setArg(2, scene->lights.size());
+
+    tracer_krnl.setArg(3, scene->planesBuffer);
+    tracer_krnl.setArg(4, scene->planes.size());
+
+    tracer_krnl.setArg(5, scene->spheresBuffer);
+    tracer_krnl.setArg(6, scene->spheres.size());
+
+    tracer_krnl.setArg(7, scene->materialsBuffer);
+}
+
+void Tracer::set_texture(GLuint texid, int width, int height)
+{
+    this->width = width;
+    this->height = height;
+    tex = cl::ImageGL(context,
+                      CL_MEM_WRITE_ONLY,
+                      GL_TEXTURE_2D,
+                      0,
+                      texid);
+    tracer_krnl.setArg(0, tex);
+}
+
+void Tracer::trace()
+{
+    scene->update();
+
+    std::vector<cl::Memory> mem_objs = {tex};
+    glFlush();
+    queue.enqueueAcquireGLObjects(&mem_objs, nullptr);
+    queue.enqueueNDRangeKernel(tracer_krnl, cl::NullRange,
+                                       cl::NDRange(width, height),
+                                       cl::NDRange(32, 32),
+                                       nullptr);
+    queue.enqueueReleaseGLObjects(&mem_objs, nullptr);
+    queue.finish();
+}
