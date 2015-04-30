@@ -32,20 +32,22 @@ struct Material {
 struct Scene
 {
     std::array<Light, 1> lights = {
-        Light({{1.0 * M_PI, 1.0 * M_PI, 1.0 * M_PI}, {-50.0, 0.0, -70.0}, 110})
+        Light({{1.0 * M_PI, 1.0 * M_PI, 1.0 * M_PI}, {-50.0, 0.0, -70.0}, 120})
     };
 
-    std::array<Plane, 5> planes = {
+    std::array<Plane, 6> planes = {
         Plane({{0.0, 1.0, 0.0}, 50, 4}),
         Plane({{1.0, 0.0, 0.0}, 60, 1}),
         Plane({{0.0, 0.0, 1.0}, 120, 2}),
         Plane({{-1.0, 0.0, 0.0}, 60, 3}),
-        Plane({{0.0, -1.0, 0.0}, 60, 0})
+        Plane({{0.0, -1.0, 0.0}, 60, 0}),
+        Plane({{0.0, 0.0, -1.0}, -130, 5})
     };
     
-    std::array<Sphere, 2> spheres = {
+    std::array<Sphere, 3> spheres = {
         Sphere({{-30.0f, 30.0f, -90.0}, 19.0, 5}),
-        Sphere({{-47.0, 10.0, -70.0}, 5.0, 0})
+        Sphere({{-47.0, 10.0, -70.0}, 5.0, 0}),
+        Sphere({{-30.0, 40.0, -100.0}, 5.0, 4}) 
     };
     
     float fresnel0 = (1.0f - 1.5f) / (1.0f + 1.5f);

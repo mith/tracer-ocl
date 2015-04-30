@@ -38,7 +38,7 @@ struct RayHit traceRayAgainstPlanes(struct Ray ray,
         float t = -(dot(plane.normal, ray.origin) + plane.offset)
             / dot(plane.normal, ray.direction);
 
-        if (t < 0.0f) {
+        if (t < 0.0001f) {
             continue;
         }
 
@@ -62,6 +62,11 @@ float lengthSquared(float3 a)
     return a.x * a.x + a.y * a.y + a.z * a.z;
 }
 
+float3 reflect(float3 i, float3 n)
+{
+    return i - 2.0f * n * dot(n, i);
+}
+
 struct RayHit traceRayAgainstSpheres(struct Ray ray,
         global const struct Sphere* spheres,
         int numSpheres) 
@@ -73,8 +78,9 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
     for (int s = 0; s < numSpheres; s++) {
         struct Sphere sphere = spheres[s];
 
-        float b = dot(ray.direction, -sphere.center);
-        float c = lengthSquared(sphere.center) - sphere.radius * sphere.radius;
+        float3 oc = ray.origin - sphere.center;
+        float b = dot(ray.direction, oc);
+        float c = dot(oc, oc) - sphere.radius * sphere.radius;
         float d = b * b -c;
         if (d < 0.0f) {
             continue;
@@ -127,7 +133,30 @@ bool hitTestSpheres(struct Ray ray,
     return object > -1;
 }
 
-float3 shading(struct Ray ray,
+float3 shade(float3 normal, float3 view, 
+        float3 lightDir, float3 halfVec,
+        float3 lightColor, float3 diffuse, 
+        float roughness, float fresnel0)
+{
+    float NdotL = dot(normal, lightDir);
+    float NdotV = dot(normal, view);
+    float NdotL_clamped = fmax(NdotL, 0.0f);
+    float NdotV_clamped = fmax(NdotV, 0.0f);
+
+    float brdf_spec = fresnel(fresnel0, halfVec, lightDir)
+        * geometry(normal, halfVec, view, lightDir, roughness)
+        * distribution(normal, halfVec, roughness)
+        / (4.0f * NdotL_clamped * NdotV_clamped);
+    float3 color_spec = NdotL_clamped * brdf_spec * lightColor;
+    float3 color_diff = NdotL_clamped 
+        * diffuse_energy_ratio(fresnel0, normal, lightDir)
+        * diffuse * lightColor;
+    float3 color_add = (float3)(color_diff + color_spec);
+    return clamp(color_add, 0.0f, 1.0f);
+
+}
+
+float3 gatherLight(struct Ray ray,
         struct RayHit hit,
         global const struct Sphere* spheres,
         int numSpheres,
@@ -136,8 +165,9 @@ float3 shading(struct Ray ray,
         global const struct Material* materials) 
 {
     struct Material material = materials[hit.material];
-    float3 color = material.color / 7;
+    float3 view = -normalize(hit.location);
     float3 normal = hit.normal;
+    float3 color = material.color / 7;
     float roughness = material.roughness;
     float fresnel0 = material.fresnel0;
 
@@ -150,30 +180,57 @@ float3 shading(struct Ray ray,
         if (!hitTestSpheres(rayToLight, 
                     distance(hit.location, light.location), 
                     spheres, numSpheres)) {
-            float3 view = -normalize(hit.location);
             float3 halfVec = normalize(lightDir + view);
-
-            float NdotL = dot(normal, lightDir);
-            float NdotV = dot(normal, view);
-            float NdotL_clamped = fmax(NdotL, 0.0f);
-            float NdotV_clamped = fmax(NdotV, 0.0f);
-
-            float brdf_spec = fresnel(material.fresnel0, halfVec, lightDir)
-                * geometry(normal, halfVec, view, lightDir, roughness)
-                * distribution(normal, halfVec, roughness)
-                / (4.0f * NdotL_clamped * NdotV_clamped);
-            float3 color_spec = NdotL_clamped * brdf_spec * light.color;
-            float3 color_diff = NdotL_clamped 
-                * diffuse_energy_ratio(fresnel0, normal, lightDir)
-                * material.color * light.color;
-            float lightDist = fast_distance(light.location, hit.location);
+            float lightDist = distance(hit.location, light.location);
             float att = clamp(1.0f - lightDist * lightDist 
-                             / (light.radius * light.radius), 0.0f, 1.0f);
+                    / (light.radius * light.radius), 0.0f, 1.0f);
             att *= att;
-            float3 color_add = (float3)(color_diff + color_spec);
-            color += clamp(att * color_add, 0.0f, 1.0f);
+            color += att * shade(normal, view, lightDir, halfVec, 
+                    light.color, material.color, roughness, fresnel0);
         }
     }
+
+    return color;
+}
+
+float3 gatherReflections(struct Ray ray,
+        struct RayHit hit,
+        global const struct Sphere* spheres,
+        int numSpheres,
+        global const struct Plane* planes,
+        int numPlanes,
+        global const struct Light* lights,
+        int numLights,
+        global const struct Material* materials)
+{
+    struct Material material = materials[hit.material];
+    float3 view = normalize(hit.location);
+    float3 normal = hit.normal;
+    float roughness = material.roughness;
+    float fresnel0 = material.fresnel0;
+    float3 color = (float3)(0.0f, 0.0f, 0.0f);
+
+    struct Ray rayReflection;
+    rayReflection.direction = reflect(view, normal);
+    rayReflection.origin = hit.location;
+
+    struct RayHit sphereHit = traceRayAgainstSpheres(rayReflection, spheres, numSpheres);
+    struct RayHit planeHit = traceRayAgainstPlanes(rayReflection, planes, numPlanes);
+
+    if (sphereHit.dist < planeHit.dist) {
+        float3 reflectColor = gatherLight(rayReflection, sphereHit, spheres, 
+                numSpheres, lights, numLights, materials);
+        float3 halfVec = normalize(rayReflection.direction + view);
+        color += (1.0f - roughness) * reflectColor;// * shade(normal, view, rayReflection.direction, halfVec,
+                //reflectColor, material.color, roughness, fresnel0);
+    } else {
+        float3 reflectColor = gatherLight(rayReflection, planeHit, spheres, 
+                numSpheres, lights, numLights, materials);
+        float3 halfVec = normalize(rayReflection.direction + view);
+        color += (1.0f - roughness) * reflectColor; //shade(normal, view, rayReflection.direction, halfVec,
+                //reflectColor, material.color, roughness, fresnel0);
+    }
+
     return color;
 }
 
@@ -184,16 +241,21 @@ void kernel tracer(write_only image2d_t img,
         int numPlanes,
         global const struct Sphere* spheres,
         int numSpheres,
-        global const struct Material* materials) {
+        global const struct Material* materials) 
+{
     const int2 coord = (int2)(get_global_id(0), get_global_id(1));
     struct Ray ray = createRay(coord);
     struct RayHit planeHit = traceRayAgainstPlanes(ray, planes, numPlanes);
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
-    float3 color = (float3)(0.1, 0.1, 0.1);
+    float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist) {
-        color = shading(ray, planeHit, spheres, numSpheres, lights, numLights, materials);
+        color = gatherLight(ray, planeHit, spheres, numSpheres, lights, numLights, materials);
+        //color += gatherReflections(ray, planeHit, spheres, numSpheres, 
+        //        planes, numPlanes, lights, numLights, materials);
     } else {
-        color = shading(ray, sphereHit, spheres, numSpheres, lights, numLights, materials);
+        color = gatherLight(ray, sphereHit, spheres, numSpheres, lights, numLights, materials);
+        //color += gatherReflections(ray, sphereHit, spheres, numSpheres, 
+        //        planes, numPlanes, lights, numLights, materials);
     }
-    write_imagef(img, coord, (float4)(color, 1.0));
+    write_imagef(img, coord, (float4)(color, 1.0f));
 }
