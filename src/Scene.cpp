@@ -7,22 +7,26 @@
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
     : context(context), device(device), queue(queue)
 {
-    lightsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(Light) * lights.size());
+    lightsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(lights));
     queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0, 
-                             sizeof(Light) * lights.size(), &lights);
+                             sizeof(lights), &lights);
 
-    planesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(Plane) * planes.size());
+    planesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(planes));
     queue.enqueueWriteBuffer(planesBuffer, CL_TRUE, 0, 
-                             sizeof(Plane) * planes.size(), &planes);
+                             sizeof(planes), &planes);
 
-    spheresBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(Sphere) * spheres.size());
+    spheresBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(spheres));
     queue.enqueueWriteBuffer(spheresBuffer, CL_TRUE, 0, 
-                             sizeof(Sphere) * spheres.size(), &spheres);
+                             sizeof(spheres), &spheres);
+
+    trianglesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(spheres));
+    queue.enqueueWriteBuffer(trianglesBuffer, CL_TRUE, 0,
+                            sizeof(triangles), &triangles);
 
     materialsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, 
-                                 sizeof(Material) * materials.size());
+                                 sizeof(materials));
     queue.enqueueWriteBuffer(materialsBuffer, CL_TRUE, 0, 
-                             sizeof(Material) * materials.size(), &materials);
+                             sizeof(materials), &materials);
 
 }
 

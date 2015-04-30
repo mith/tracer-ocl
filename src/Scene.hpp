@@ -22,6 +22,10 @@ struct Light {
     cl_float3 location;
     cl_float radius;
 };
+
+struct Triangle {
+    cl_float3 points[3];
+};
  
 struct Material {
     cl_float3 color;
@@ -49,6 +53,10 @@ struct Scene
         Sphere({{-47.0, 10.0, -70.0}, 5.0, 0}),
         Sphere({{-30.0, 40.0, -100.0}, 5.0, 4}) 
     };
+
+    std::array<Triangle, 1> triangles = {
+        Triangle({{{0.0, 0.0, -30.0},{10.0, 0.0, -35.0},{10.0, 10.0, -30.0}}})
+    };
     
     float fresnel0 = (1.0f - 1.5f) / (1.0f + 1.5f);
 
@@ -64,6 +72,7 @@ struct Scene
     cl::Buffer lightsBuffer;
     cl::Buffer planesBuffer;
     cl::Buffer spheresBuffer;
+    cl::Buffer trianglesBuffer;
     cl::Buffer materialsBuffer;
 
     cl::Context context;

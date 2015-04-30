@@ -65,7 +65,7 @@ float geometry(float3 n, float3 h,
 //     float a_Sq = a * a;
 //     float a_term;
 //     if (a < 1.6f)
-//         a_term = (3.535f * a + 2.181f * a_Sq) / (1.0f + 2.276 * a + 2.577 * a_Sq);
+//         a_term = (3.535f * a + 2.181f * a_Sq) / (1.0f + 2.276f * a + 2.577f * a_Sq);
 //     else
 //         a_term = 1.0f;
 //     return (step(0.0f, HdotL / NdotL) * a_term)

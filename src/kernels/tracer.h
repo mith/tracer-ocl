@@ -1,7 +1,5 @@
-struct Ray {
-    float3 origin;
-    float3 direction;
-};
+#pragma once
+#include "primitives.h"
 
 struct RayHit {
     float3 location;
@@ -11,31 +9,7 @@ struct RayHit {
     int object;
 };
 
-struct Plane {
-    float3 normal;
-    float offset;
-    int material;
-};
-
-struct Sphere {
-    float3 center;
-    float radius;
-    int material;
-};
-
-struct Light {
-    float3 color;
-    float3 location;
-    float radius;
-};
-
-struct Material {
-    float3 color;
-    float fresnel0;
-    float roughness;
-};
-
-struct Ray createRay(int2 coord);
+struct Ray createCameraRay(int2 coord);
 
 float3 rayPoint(struct Ray ray, float t);
 
@@ -56,11 +30,6 @@ bool hitTestSpheres(struct Ray ray,
         global const struct Sphere* spheres,
         int numSpheres);
 
-float3 blinnPhong(struct Ray ray,
-        struct RayHit hit,
-        global const struct Light* light,
-        global const struct Material* material);
-
 float3 shade(float3 normal, float3 view, 
               float3 lightDir, float3 halfVec,
               float3 lightColor, float3 diffuse, 
@@ -74,21 +43,13 @@ float3 gatherLight(struct Ray ray,
         int numLights,
         global const struct Material* materials);
 
-float3 gatherReflections(struct Ray ray,
-        struct RayHit hit,
-        global const struct Sphere* spheres,
-        int numSpheres,
-        global const struct Plane* planes,
-        int numPlanes,
-        global const struct Light* lights,
+void __kernel tracer(write_only image2d_t img, 
+        __global const struct Light* lights,
         int numLights,
-        global const struct Material* materials);
-
-void kernel tracer(write_only image2d_t img, 
-        global const struct Light* lights,
-        int numLights,
-        global const struct Plane* planes,
+        __global const struct Plane* planes,
         int numPlanes,
-        global const struct Sphere* spheres,
+        __global const struct Sphere* spheres,
         int numSpheres,
-        global const struct Material* materials);
+        __global const struct Triangle* triangles,
+        int numTriangles,
+        __global const struct Material* materials);

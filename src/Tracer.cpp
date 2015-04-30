@@ -54,6 +54,7 @@ void Tracer::load_kernels()
 
     for (auto & flnm : kernel_filenames) {
         auto src = file_str(flnm);
+        std::cout << *src << std::endl;
         sources.push_back({src->c_str(), src->length()});
     }
 
@@ -74,7 +75,10 @@ void Tracer::load_kernels()
     tracer_krnl.setArg(5, scene->spheresBuffer);
     tracer_krnl.setArg(6, scene->spheres.size());
 
-    tracer_krnl.setArg(7, scene->materialsBuffer);
+    tracer_krnl.setArg(7, scene->trianglesBuffer);
+    tracer_krnl.setArg(8, scene->triangles.size());
+
+    tracer_krnl.setArg(9, scene->materialsBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)

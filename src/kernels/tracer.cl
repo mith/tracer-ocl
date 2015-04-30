@@ -1,7 +1,10 @@
 #include "tracer.h"
+
+#include "intersect.h"
+
 #include "brdf.h"
 
-struct Ray createRay(int2 coord) 
+struct Ray createCameraRay(int2 coord) 
 {
     const float viewport_width = 2.0f;
     const float viewport_height = 1.0f;
@@ -35,8 +38,7 @@ struct RayHit traceRayAgainstPlanes(struct Ray ray,
     for (int p = 0; p < numPlanes; p++) {
         struct Plane plane = planes[p];
 
-        float t = -(dot(plane.normal, ray.origin) + plane.offset)
-            / dot(plane.normal, ray.direction);
+        float t = intersectPlane(ray, plane);
 
         if (t < 0.0001f) {
             continue;
@@ -77,20 +79,11 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
 
     for (int s = 0; s < numSpheres; s++) {
         struct Sphere sphere = spheres[s];
-
-        float3 oc = ray.origin - sphere.center;
-        float b = dot(ray.direction, oc);
-        float c = dot(oc, oc) - sphere.radius * sphere.radius;
-        float d = b * b -c;
-        if (d < 0.0f) {
-            continue;
-        }
-
-        float t = -b - sqrt(d);
+        float t = intersectSphere(ray, sphere);
         float3 loc = rayPoint(ray, t);
         float3 normal = normalize(loc - sphere.center);
 
-        float dist = distance(loc, (float3)(0.0, 0.0, 0.0));
+        float dist = distance(loc, (float3)(0.0f, 0.0f, 0.0f));
 
         if (nearestHit.dist > dist) {
             nearestHit.dist = dist;
@@ -114,17 +107,7 @@ bool hitTestSpheres(struct Ray ray,
 
     for (int s = 0; s < numSpheres; s++) {
         struct Sphere sphere = spheres[s];
-
-        float3 oc = ray.origin - sphere.center;
-        float b = dot(ray.direction, oc);
-        float c = dot(oc, oc) - sphere.radius * sphere.radius;
-        float d = b * b - c;
-
-        if (d < 0.0f) {
-            continue;
-        }
-
-        float t = -b - sqrt(d);
+        float t = intersectSphere(ray, sphere);
         if (-t < nearestDist && -t > 0.0f) {
             nearestDist = t;
             object = s;
@@ -133,129 +116,88 @@ bool hitTestSpheres(struct Ray ray,
     return object > -1;
 }
 
-float3 shade(float3 normal, float3 view, 
-        float3 lightDir, float3 halfVec,
-        float3 lightColor, float3 diffuse, 
-        float roughness, float fresnel0)
-{
-    float NdotL = dot(normal, lightDir);
-    float NdotV = dot(normal, view);
-    float NdotL_clamped = fmax(NdotL, 0.0f);
-    float NdotV_clamped = fmax(NdotV, 0.0f);
+// float3 shade(float3 normal, float3 view, 
+//         float3 lightDir, float3 halfVec,
+//         float3 lightColor, float3 diffuse, 
+//         float roughness, float fresnel0)
+// {
+//     float NdotL = dot(normal, lightDir);
+//     float NdotV = dot(normal, view);
+//     float NdotL_clamped = fmax(NdotL, 0.0f);
+//     float NdotV_clamped = fmax(NdotV, 0.0f);
+// 
+//     float brdf_spec = fresnel(fresnel0, halfVec, lightDir)
+//         * geometry(normal, halfVec, view, lightDir, roughness)
+//         * distribution(normal, halfVec, roughness)
+//         / (4.0f * NdotL_clamped * NdotV_clamped);
+//     float3 color_spec = NdotL_clamped * brdf_spec * lightColor;
+//     float3 color_diff = NdotL_clamped 
+//         * diffuse_energy_ratio(fresnel0, normal, lightDir)
+//         * diffuse * lightColor;
+//     float3 color_add = (float3)(color_diff + color_spec);
+//     return clamp(color_add, 0.0f, 1.0f);
+// 
+// }
+// 
+// float3 gatherLight(struct Ray ray,
+//         struct RayHit hit,
+//         global const struct Sphere* spheres,
+//         int numSpheres,
+//         global const struct Light* lights,
+//         int numLights,
+//         global const struct Material* materials) 
+// {
+//     struct Material material = materials[hit.material];
+//     float3 view = -normalize(hit.location);
+//     float3 normal = hit.normal;
+//     float3 color = material.color / 7.0f;
+//     float roughness = material.roughness;
+//     float fresnel0 = material.fresnel0;
+// 
+//     for (int l = 0; l < numLights; l++) {
+//         struct Light light = lights[l];
+//         float3 lightDir = normalize(light.location - hit.location);
+//         struct Ray rayToLight;
+//         rayToLight.origin = light.location;
+//         rayToLight.direction = lightDir;
+//         if (!hitTestSpheres(rayToLight, 
+//                     distance(hit.location, light.location), 
+//                     spheres, numSpheres)) {
+//             float3 halfVec = normalize(lightDir + view);
+//             float lightDist = distance(hit.location, light.location);
+//             float att = clamp(1.0f - lightDist * lightDist 
+//                     / (light.radius * light.radius), 0.0f, 1.0f);
+//             att *= att;
+//             color += att * shade(normal, view, lightDir, halfVec, 
+//                     light.color, material.color, roughness, fresnel0);
+//         }
+//     }
+// 
+//     return color;
+// }
 
-    float brdf_spec = fresnel(fresnel0, halfVec, lightDir)
-        * geometry(normal, halfVec, view, lightDir, roughness)
-        * distribution(normal, halfVec, roughness)
-        / (4.0f * NdotL_clamped * NdotV_clamped);
-    float3 color_spec = NdotL_clamped * brdf_spec * lightColor;
-    float3 color_diff = NdotL_clamped 
-        * diffuse_energy_ratio(fresnel0, normal, lightDir)
-        * diffuse * lightColor;
-    float3 color_add = (float3)(color_diff + color_spec);
-    return clamp(color_add, 0.0f, 1.0f);
-
-}
-
-float3 gatherLight(struct Ray ray,
-        struct RayHit hit,
-        global const struct Sphere* spheres,
-        int numSpheres,
-        global const struct Light* lights,
+void __kernel tracer(write_only image2d_t img, 
+        __global const struct Light* lights,
         int numLights,
-        global const struct Material* materials) 
-{
-    struct Material material = materials[hit.material];
-    float3 view = -normalize(hit.location);
-    float3 normal = hit.normal;
-    float3 color = material.color / 7;
-    float roughness = material.roughness;
-    float fresnel0 = material.fresnel0;
-
-    for (int l = 0; l < numLights; l++) {
-        struct Light light = lights[l];
-        float3 lightDir = normalize(light.location - hit.location);
-        struct Ray rayToLight;
-        rayToLight.origin = light.location;
-        rayToLight.direction = lightDir;
-        if (!hitTestSpheres(rayToLight, 
-                    distance(hit.location, light.location), 
-                    spheres, numSpheres)) {
-            float3 halfVec = normalize(lightDir + view);
-            float lightDist = distance(hit.location, light.location);
-            float att = clamp(1.0f - lightDist * lightDist 
-                    / (light.radius * light.radius), 0.0f, 1.0f);
-            att *= att;
-            color += att * shade(normal, view, lightDir, halfVec, 
-                    light.color, material.color, roughness, fresnel0);
-        }
-    }
-
-    return color;
-}
-
-float3 gatherReflections(struct Ray ray,
-        struct RayHit hit,
-        global const struct Sphere* spheres,
-        int numSpheres,
-        global const struct Plane* planes,
+        __global const struct Plane* planes,
         int numPlanes,
-        global const struct Light* lights,
-        int numLights,
-        global const struct Material* materials)
-{
-    struct Material material = materials[hit.material];
-    float3 view = normalize(hit.location);
-    float3 normal = hit.normal;
-    float roughness = material.roughness;
-    float fresnel0 = material.fresnel0;
-    float3 color = (float3)(0.0f, 0.0f, 0.0f);
-
-    struct Ray rayReflection;
-    rayReflection.direction = reflect(view, normal);
-    rayReflection.origin = hit.location;
-
-    struct RayHit sphereHit = traceRayAgainstSpheres(rayReflection, spheres, numSpheres);
-    struct RayHit planeHit = traceRayAgainstPlanes(rayReflection, planes, numPlanes);
-
-    if (sphereHit.dist < planeHit.dist) {
-        float3 reflectColor = gatherLight(rayReflection, sphereHit, spheres, 
-                numSpheres, lights, numLights, materials);
-        float3 halfVec = normalize(rayReflection.direction + view);
-        color += (1.0f - roughness) * reflectColor;// * shade(normal, view, rayReflection.direction, halfVec,
-                //reflectColor, material.color, roughness, fresnel0);
-    } else {
-        float3 reflectColor = gatherLight(rayReflection, planeHit, spheres, 
-                numSpheres, lights, numLights, materials);
-        float3 halfVec = normalize(rayReflection.direction + view);
-        color += (1.0f - roughness) * reflectColor; //shade(normal, view, rayReflection.direction, halfVec,
-                //reflectColor, material.color, roughness, fresnel0);
-    }
-
-    return color;
-}
-
-void kernel tracer(write_only image2d_t img, 
-        global const struct Light* lights,
-        int numLights,
-        global const struct Plane* planes,
-        int numPlanes,
-        global const struct Sphere* spheres,
+        __global const struct Sphere* spheres,
         int numSpheres,
-        global const struct Material* materials) 
+        __global const struct Triangle* triangles,
+        int numTriangles,
+        __global const struct Material* materials) 
 {
     const int2 coord = (int2)(get_global_id(0), get_global_id(1));
-    struct Ray ray = createRay(coord);
+    struct Ray ray = createCameraRay(coord);
     struct RayHit planeHit = traceRayAgainstPlanes(ray, planes, numPlanes);
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist) {
-        color = gatherLight(ray, planeHit, spheres, numSpheres, lights, numLights, materials);
-        //color += gatherReflections(ray, planeHit, spheres, numSpheres, 
-        //        planes, numPlanes, lights, numLights, materials);
+        color = planeHit.location; 
+        // gatherLight(ray, planeHit, spheres, numSpheres, lights, numLights, materials);
     } else {
-        color = gatherLight(ray, sphereHit, spheres, numSpheres, lights, numLights, materials);
-        //color += gatherReflections(ray, sphereHit, spheres, numSpheres, 
-        //        planes, numPlanes, lights, numLights, materials);
+        color = sphereHit.location;
+        //gatherLight(ray, sphereHit, spheres, numSpheres, lights, numLights, materials);
     }
     write_imagef(img, coord, (float4)(color, 1.0f));
 }
