@@ -1,11 +1,17 @@
-#define __CL_ENABLE_EXCEPTIONS
-
+#ifdef __APPLE__
 #include <OpenCL/cl.h>
 #include <OpenCL/cl_gl.h>
 #include <OpenCL/cl_gl_ext.h>
 #include <OpenCL/cl_platform.h>
 #include <OpenGL/opengl.h>
 #include <OpenGL/gl3.h>
+#elif defined __linux__
+#include <CL/cl.h>
+#include <CL/cl_gl.h>
+#include <CL/cl_gl_ext.h>
+#include <CL/cl_platform.h>
+#include "gl3.h"
+#endif
 
 #include <iostream>
 #include <memory>
@@ -48,3 +54,5 @@ public:
     void set_texture(GLuint texid, int width, int height);
     void trace();
 };
+
+void CL_CALLBACK contextCallback(const char*, const void*, size_t, void*);

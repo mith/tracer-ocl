@@ -1,9 +1,17 @@
-#define __CL_ENABLE_EXCEPTIONS
+#ifdef __APPLE__
 #include <OpenCL/cl.h>
 #include <OpenCL/cl_gl.h>
 #include <OpenCL/cl_gl_ext.h>
 #include <OpenCL/cl_platform.h>
 #include <OpenGL/opengl.h>
+#include <OpenGL/gl3.h>
+#elif defined __linux__
+#include <CL/cl.h>
+#include <CL/cl_gl.h>
+#include <CL/cl_gl_ext.h>
+#include <CL/cl_platform.h>
+#include "gl3.h"
+#endif
 
 #define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
@@ -246,16 +254,12 @@ int main()
 
     FullscreenTextureDrawer drawer(width, height);
 
-    tracer.load_kernels();
-    tracer.set_texture(drawer.tex, width, height);
+        tracer.load_kernels();
+        tracer.set_texture(drawer.tex, width, height);
 
     while (!glfwWindowShouldClose(window))
     {
-        try {
             tracer.trace();
-        } catch (cl::Error error) {
-            std::cerr << error.what() << "(" << error.err() << ")" << std::endl;
-        }
         drawer.display();
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -24,7 +24,6 @@ bool hitTestSpheres(struct Ray ray,
                     float targetDistance,
                     global const struct Sphere* spheres,
                     int numSpheres);
-
 void kernel tracer(write_only image2d_t img,
                    global const struct Light* lights,
                    int numLights,
