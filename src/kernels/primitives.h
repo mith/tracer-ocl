@@ -10,7 +10,7 @@ struct Ray {
 
 struct Plane {
     float3 normal;
-    float3 offset;
+    float offset;
     int material;
 };
 

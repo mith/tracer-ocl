@@ -28,7 +28,7 @@ Tracer::Tracer()
                   << std::endl;
     }
 
-    device = all_devices[0];
+    device = all_devices[2];
     std::cout << "Using device: "
               << device.getInfo<CL_DEVICE_NAME>()
               << std::endl;
