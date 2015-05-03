@@ -5,10 +5,13 @@
 float intersectPlane(struct Ray ray, struct Plane plane)
 {
     float d = dot(plane.normal, ray.direction);
-    if (d != 0.0f)
-        return -(dot(plane.normal, ray.origin) + plane.offset) / d;
-    else
+    if (d != 0.0f) {
+        float NdotO = dot(plane.normal, ray.origin);
+        float nrm = -(NdotO + plane.offset);
+        return nrm / d;
+    } else {
         return (float)INFINITY;
+    }
 }
 
 float intersectSphere(struct Ray ray, struct Sphere sphere)
