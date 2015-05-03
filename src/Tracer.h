@@ -34,9 +34,11 @@ class Tracer
     cl::Device device;
     cl::CommandQueue queue;
 
-    const std::array<std::string, 2> kernel_filenames = {{
+    const std::array<std::string, 4> kernel_filenames = {{
         "kernels/tracer.cl",
-        "kernels/intersect.cl"
+        "kernels/intersect.cl",
+        "kernels/brdf.cl",
+        "kernels/shader.cl"
     }};
 
     cl::Program program;

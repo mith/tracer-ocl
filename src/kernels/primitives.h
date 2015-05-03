@@ -36,6 +36,14 @@ struct Triangle {
     float3 points[3];
 };
 
+struct RayHit {
+    float3 location;
+    float3 normal;
+    float dist;
+    int material;
+    int object;
+};
+
 // struct RayHit {
 //     float3 normal;
 //     float3 incidence;

@@ -2,14 +2,6 @@
 
 #include "primitives.h"
 
-struct RayHit {
-    float3 location;
-    float3 normal;
-    float dist;
-    int material;
-    int object;
-};
-
 struct Ray createCameraRay(int2 coord);
 float3 rayPoint(struct Ray ray, float t);
 struct RayHit traceRayAgainstPlanes(struct Ray ray,

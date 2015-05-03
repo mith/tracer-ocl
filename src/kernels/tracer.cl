@@ -2,6 +2,7 @@
 
 #include "tracer.h"
 #include "intersect.h"
+#include "shader.h"
 
 struct Ray createCameraRay(int2 coord)
 {
@@ -129,11 +130,9 @@ void kernel tracer(write_only image2d_t img,
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist) {
-        color = planeHit.location;
-        //gatherLight(ray, planeHit, spheres, numSpheres, lights, numLights, materials);
+        color = gatherLight(ray, planeHit, spheres, numSpheres, lights, numLights, materials);
     } else {
-        color = planeHit.location;
-        //gatherLight(ray, sphereHit, spheres, numSpheres, lights, numLights, materials);
+        color = gatherLight(ray, sphereHit, spheres, numSpheres, lights, numLights, materials);
     }
     write_imagef(img, coord, (float4)(color, 10.f));
 }
