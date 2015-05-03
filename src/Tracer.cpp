@@ -28,7 +28,12 @@ Tracer::Tracer()
                   << std::endl;
     }
 
+#ifdef __APPLE__
     device = all_devices[2];
+#elif defined __linux__
+    device = all_devices[0];
+#endif
+
     std::cout << "Using device: "
               << device.getInfo<CL_DEVICE_NAME>()
               << std::endl;
@@ -37,7 +42,7 @@ Tracer::Tracer()
 #ifdef __APPLE__
         CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
         (cl_context_properties) CGLGetShareGroup(CGLGetCurrentContext()),
-#elif __linux__
+#elif defined __linux__
         CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
         CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
         CL_CONTEXT_PLATFORM, (cl_context_properties)(all_platforms[0])(),
@@ -47,7 +52,7 @@ Tracer::Tracer()
 
 #ifdef __APPLE__
     context = cl::Context(device, properties, clLogMessagesToStdoutAPPLE);
-#elif __linux
+#elif defined __linux__
     context = cl::Context(device, properties, &contextCallback);
 #endif
     queue = cl::CommandQueue(context, device);
