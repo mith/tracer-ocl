@@ -1,5 +1,9 @@
 #include "Tracer.h"
 
+#ifdef __linux__
+#include <GL/glx.h>
+#endif
+
 Tracer::Tracer()
 {
     std::vector<cl::Platform> all_platforms;
@@ -23,21 +27,40 @@ Tracer::Tracer()
                   << std::endl;
     }
 
-    device = all_devices[2];
+    device = all_devices[0];
     std::cout << "Using device: "
               << device.getInfo<CL_DEVICE_NAME>()
               << std::endl;
 
     cl_context_properties properties[] {
+#ifdef __APPLE__
         CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
         (cl_context_properties) CGLGetShareGroup(CGLGetCurrentContext()),
+#elif __linux__
+        CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
+        CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
+        CL_CONTEXT_PLATFORM, (cl_context_properties)(all_platforms[0])(),
+#endif
         0
     };
 
+#ifdef __APPLE__
     context = cl::Context(device, properties, clLogMessagesToStdoutAPPLE);
+#elif __linux
+    context = cl::Context(device, properties, &contextCallback);
+#endif
     queue = cl::CommandQueue(context, device);
 
     scene = std::make_unique<Scene>(context, device, queue);
+}
+
+void CL_CALLBACK contextCallback(
+        const char* errInfo,
+        const void* private_info,
+        size_t cb,
+        void* user_data)
+{
+    std::cerr << errInfo << std::endl;
 }
 
 std::unique_ptr<std::string> file_str (std::string filename)
@@ -59,7 +82,7 @@ void Tracer::load_kernels()
     }
 
     program = cl::Program(context, sources);
-    if (program.build({device}, "-I ./kernels/") != CL_SUCCESS) {
+    if(program.build({device}, "-I ./kernels/") != CL_SUCCESS) {
         std::cerr << "error building: "
                   << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
                   << std::endl;

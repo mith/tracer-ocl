@@ -1,3 +1,5 @@
+//////
+
 #ifndef PRIMITIVES_H_
 #define PRIMITIVES_H_
 
@@ -8,7 +10,7 @@ struct Ray {
 
 struct Plane {
     float3 normal;
-    float offset;
+    float3 offset;
     int material;
 };
 
