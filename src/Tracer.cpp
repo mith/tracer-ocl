@@ -71,22 +71,12 @@ void CL_CALLBACK contextCallback(
 
 std::unique_ptr<std::string> file_str (std::string filename)
 {
-    std::fstream txt_file;
-    txt_file.open(filename, std::fstream::in | std::fstream::binary);
-    size_t size;
-    txt_file.seekg(0, std::fstream::end);
-    size = (size_t)txt_file.tellg();
-    txt_file.seekg(0, std::fstream::beg);
-
-    char * str = (char*)alloca(size + 1);
-    txt_file.read(str, size);
-    str[size] = '\0';
-//
-//    std::stringstream txt_buf;
-//    txt_buf.str("");
-//    txt_buf << txt_file.rdbuf();
-//    std::string src = txt_buf.str();
-    return std::make_unique<std::string>(str);
+    std::fstream txt_file(filename);
+    std::stringstream txt_buf;
+    txt_buf.str("");
+    txt_buf << txt_file.rdbuf();
+    std::string src = txt_buf.str();
+    return std::make_unique<std::string>(src.c_str());
 }
 
 void Tracer::load_kernels()

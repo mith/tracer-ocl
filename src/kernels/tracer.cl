@@ -75,7 +75,7 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
     
     for (int s = 0; s < numSpheres; s++) {
         struct Sphere sphere = spheres[s];
-        float t = 0.1f; //intersectSphere(ray, sphere);
+        float t = intersectSphere(ray, sphere);
         float3 loc = rayPoint(ray, t);
         float3 normal = normalize(loc - sphere.center);
         
@@ -103,7 +103,7 @@ bool hitTestSpheres(struct Ray ray,
     
     for (int s = 0; s < numSpheres; s++) {
         struct Sphere sphere = spheres[s];
-        float t = 0.1f; //intersectSphere(ray, sphere);
+        float t = intersectSphere(ray, sphere);
         if (-t < nearestDist && -t > 0.0f) {
             nearestDist = t;
             object = s;
@@ -129,10 +129,10 @@ void kernel tracer(write_only image2d_t img,
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist) {
-        color = (float3)(0.5f, 0.0f, 0.0f); //planeHit.location;
+        color = planeHit.location;
         //gatherLight(ray, planeHit, spheres, numSpheres, lights, numLights, materials);
     } else {
-        color = (float3)(0.0f, 0.5f, 0.0f); //planeHit.location;
+        color = planeHit.location;
         //gatherLight(ray, sphereHit, spheres, numSpheres, lights, numLights, materials);
     }
     write_imagef(img, coord, (float4)(color, 10.f));
