@@ -28,18 +28,15 @@ struct Ray {
     cl_float3 origin;
     cl_float3 direction;
 };
-class Tracer 
-{
+class Tracer {
     cl::Context context;
     cl::Device device;
     cl::CommandQueue queue;
 
-    const std::array<std::string, 4> kernel_filenames = {{
-        "kernels/tracer.cl",
-        "kernels/intersect.cl",
-        "kernels/brdf.cl",
-        "kernels/shader.cl"
-    }};
+    const std::array<std::string, 4> kernel_filenames = { { "kernels/tracer.cl",
+                                                            "kernels/intersect.cl",
+                                                            "kernels/brdf.cl",
+                                                            "kernels/shader.cl" } };
 
     cl::Program program;
     cl::Kernel tracer_krnl;

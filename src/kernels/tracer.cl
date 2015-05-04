@@ -8,10 +8,10 @@ struct Ray createCameraRay(int2 coord)
 {
     const float viewport_width = 2.0f;
     const float viewport_height = 1.0f;
-    
+
     const float x_ratio = viewport_width / (float)get_global_size(0);
     const float y_ratio = viewport_height / (float)get_global_size(1);
-    
+
     struct Ray ray;
     ray.direction = normalize((float3)(coord.x * x_ratio - 1.0f,
                                        coord.y * y_ratio - 0.5f,
@@ -42,19 +42,19 @@ struct RayHit traceRayAgainstPlanes(struct Ray ray,
     struct RayHit nearestHit;
     nearestHit.dist = (float)(INFINITY);
     nearestHit.material = -1;
-    
+
     for (int p = 0; p < numPlanes; p++) {
         struct Plane plane = planes[p];
-        
+
         float t = intersectPlane(ray, plane);
-        
+
         if (t < 0.0001f) {
             continue;
         }
-        
+
         float3 loc = rayPoint(ray, t);
         float dist = distance(ray.origin, loc);
-        
+
         if (nearestHit.dist > dist) {
             nearestHit.dist = dist;
             nearestHit.location = loc;
@@ -73,15 +73,15 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
     struct RayHit nearestHit;
     nearestHit.dist = (float)(INFINITY);
     nearestHit.material = -1;
-    
+
     for (int s = 0; s < numSpheres; s++) {
         struct Sphere sphere = spheres[s];
         float t = intersectSphere(ray, sphere);
         float3 loc = rayPoint(ray, t);
         float3 normal = normalize(loc - sphere.center);
-        
+
         float dist = distance(loc, ray.origin);
-        
+
         if (nearestHit.dist > dist) {
             nearestHit.dist = dist;
             nearestHit.location = loc;
@@ -90,7 +90,7 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
             nearestHit.object = s;
         }
     }
-    
+
     return nearestHit;
 }
 
@@ -101,18 +101,18 @@ struct RayHit traceRayAgainstTriangles(struct Ray ray,
     struct RayHit nearestHit;
     nearestHit.dist = (float)(INFINITY);
     nearestHit.material = -1;
-    
+
     for (int t = 0; t < numTriangles; t++) {
         struct Triangle triangle = triangles[t];
         float t = intersectTriangle(ray, triangle);
         float3 loc = rayPoint(ray, t);
-        
+
         float3 v = triangle.b - triangle.a;
         float3 w = triangle.c - triangle.a;
         float3 normal = normalize(cross(v, w));
-        
+
         float dist = distance(loc, ray.origin);
-        
+
         if (nearestHit.dist > dist) {
             nearestHit.dist = dist;
             nearestHit.location = loc;
@@ -121,7 +121,7 @@ struct RayHit traceRayAgainstTriangles(struct Ray ray,
             nearestHit.object = t;
         }
     }
-    
+
     return nearestHit;
 }
 
@@ -143,13 +143,13 @@ void kernel tracer(write_only image2d_t img,
     struct RayHit triangleHit = traceRayAgainstTriangles(ray, triangles, numTriangles);
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist && planeHit.dist < triangleHit.dist) {
-        color = gatherLight(ray, planeHit, spheres, numSpheres, 
+        color = gatherLight(ray, planeHit, spheres, numSpheres,
                             triangles, numTriangles, lights, numLights, materials);
     } else if (triangleHit.dist < sphereHit.dist) {
-        color = gatherLight(ray, triangleHit, spheres, numSpheres, 
+        color = gatherLight(ray, triangleHit, spheres, numSpheres,
                             triangles, numTriangles, lights, numLights, materials);
     } else {
-        color = gatherLight(ray, sphereHit, spheres, numSpheres, 
+        color = gatherLight(ray, sphereHit, spheres, numSpheres,
                             triangles, numTriangles, lights, numLights, materials);
     }
     write_imagef(img, coord, (float4)(color, 10.f));

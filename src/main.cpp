@@ -18,7 +18,7 @@
 #include "cl.hpp"
 #include "Tracer.h"
 
-void glfw_error(int error, const char * description)
+void glfw_error(int error, const char* description)
 {
     std::cerr << "Error " << error << ": " << description << std::endl;
 }
@@ -26,17 +26,22 @@ void glfw_error(int error, const char * description)
 void gl_check_error(int line)
 {
     GLenum errorcode = glGetError();
-    switch(errorcode) {
-        case GL_INVALID_ENUM:
-            printf("function called with invalid enum at line %d\n", line); break;
-        case GL_INVALID_VALUE:
-            printf("argument has invalid value at line %d\n", line); break;
-        case GL_INVALID_OPERATION:
-            printf("operation is invalid at line %d\n", line); break;
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-            printf("framebuffer object not complete at line %d\n", line); break;
-        default:
-            printf("no error detected\n"); break;
+    switch (errorcode) {
+    case GL_INVALID_ENUM:
+        printf("function called with invalid enum at line %d\n", line);
+        break;
+    case GL_INVALID_VALUE:
+        printf("argument has invalid value at line %d\n", line);
+        break;
+    case GL_INVALID_OPERATION:
+        printf("operation is invalid at line %d\n", line);
+        break;
+    case GL_INVALID_FRAMEBUFFER_OPERATION:
+        printf("framebuffer object not complete at line %d\n", line);
+        break;
+    default:
+        printf("no error detected\n");
+        break;
     }
 }
 
@@ -48,43 +53,45 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void window_resize_callback(GLFWwindow* window, int width, int height)
 {
-    glViewport(0, 0, (GLsizei)width, (GLsizei) height);
+    glViewport(0, 0, (GLsizei)width, (GLsizei)height);
 }
 
-GLuint CreateShader(GLenum eShaderType, const std::string &strShaderFile)
+GLuint CreateShader(GLenum eShaderType, const std::string& strShaderFile)
 {
     GLuint shader = glCreateShader(eShaderType);
-    const char *strFileData = strShaderFile.c_str();
+    const char* strFileData = strShaderFile.c_str();
     glShaderSource(shader, 1, &strFileData, NULL);
 
     glCompileShader(shader);
 
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-    if (status == GL_FALSE)
-    {
+    if (status == GL_FALSE) {
         GLint infoLogLength;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-        GLchar *strInfoLog = new GLchar[infoLogLength + 1];
+        GLchar* strInfoLog = new GLchar[infoLogLength + 1];
         glGetShaderInfoLog(shader, infoLogLength, NULL, strInfoLog);
 
-        const char *strShaderType = NULL;
-        switch(eShaderType)
-        {
-        case GL_VERTEX_SHADER: strShaderType = "vertex"; break;
-        case GL_FRAGMENT_SHADER: strShaderType = "fragment"; break;
+        const char* strShaderType = NULL;
+        switch (eShaderType) {
+        case GL_VERTEX_SHADER:
+            strShaderType = "vertex";
+            break;
+        case GL_FRAGMENT_SHADER:
+            strShaderType = "fragment";
+            break;
         }
 
-        fprintf(stderr, "Compile failure in %s shader:\n%s\n", strShaderType, 
-                                                               strInfoLog);
+        fprintf(stderr, "Compile failure in %s shader:\n%s\n", strShaderType,
+                strInfoLog);
         delete[] strInfoLog;
     }
 
     return shader;
 }
 
-GLuint CreateProgram(const std::vector<GLuint> &shaderList)
+GLuint CreateProgram(const std::vector<GLuint>& shaderList)
 {
     GLuint program = glCreateProgram();
 
@@ -95,13 +102,12 @@ GLuint CreateProgram(const std::vector<GLuint> &shaderList)
     glLinkProgram(program);
 
     GLint status;
-    glGetProgramiv (program, GL_LINK_STATUS, &status);
-    if (status == GL_FALSE)
-    {
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
+    if (status == GL_FALSE) {
         GLint infoLogLength;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-        GLchar *strInfoLog = new GLchar[infoLogLength + 1];
+        GLchar* strInfoLog = new GLchar[infoLogLength + 1];
         glGetProgramInfoLog(program, infoLogLength, NULL, strInfoLog);
         fprintf(stderr, "Linker failure: %s\n", strInfoLog);
         delete[] strInfoLog;
@@ -114,14 +120,12 @@ GLuint CreateProgram(const std::vector<GLuint> &shaderList)
     return program;
 }
 
-struct Vertex
-{
+struct Vertex {
     float position[2];
     float uvcoord[2];
 };
 
-struct FullscreenTextureDrawer
-{
+struct FullscreenTextureDrawer {
     GLuint shader;
     GLuint positionBufferObject;
     GLuint elementBufferObject;
@@ -130,11 +134,11 @@ struct FullscreenTextureDrawer
     GLuint tex;
 
     const GLfloat vertices[16] = {
-     // Position       Texcoords
-        -1.0f,  1.0f,  0.0f, 0.0f, // Top-left
-         1.0f,  1.0f,  1.0f, 0.0f, // Top-right
-         1.0f, -1.0f,  1.0f, 1.0f, // Bottom-right
-        -1.0f, -1.0f,  0.0f, 1.0f  // Bottom-left
+        // Position       Texcoords
+        -1.0f, 1.0f, 0.0f, 0.0f, // Top-left
+        1.0f, 1.0f, 1.0f, 0.0f, // Top-right
+        1.0f, -1.0f, 1.0f, 1.0f, // Bottom-right
+        -1.0f, -1.0f, 0.0f, 1.0f // Bottom-left
     };
 
     GLuint elements[6] = {
@@ -142,39 +146,33 @@ struct FullscreenTextureDrawer
         2, 3, 0
     };
 
-    const std::string vertexShaderSrc = (
-        "#version 330\n"
-        "layout(location = 0) in vec2 position;\n"
-        "layout(location = 1) in vec2 texcoord;\n"
-        "out vec2 f_texcoord;\n"
-        "void main()\n"
-        "{\n"
-        "   gl_Position = vec4(position, 0.0f, 1.0f);\n"
-        "   f_texcoord = texcoord;\n"
-        "}\n"
-    );
-     
-    const std::string fragmentShaderSrc = (
-        "#version 330\n"
-        "in vec2 f_texcoord;\n"
-        "out vec4 outputColor;\n"
-        "uniform sampler2D tex;\n"
-        "void main() {\n"
-        "vec4 col = texture(tex, vec2(f_texcoord.x, -f_texcoord.y));\n"
-        "outputColor = col;\n"
-        "}\n"
-    );
+    const std::string vertexShaderSrc = ("#version 330\n"
+                                         "layout(location = 0) in vec2 position;\n"
+                                         "layout(location = 1) in vec2 texcoord;\n"
+                                         "out vec2 f_texcoord;\n"
+                                         "void main()\n"
+                                         "{\n"
+                                         "   gl_Position = vec4(position, 0.0f, 1.0f);\n"
+                                         "   f_texcoord = texcoord;\n"
+                                         "}\n");
+
+    const std::string fragmentShaderSrc = ("#version 330\n"
+                                           "in vec2 f_texcoord;\n"
+                                           "out vec4 outputColor;\n"
+                                           "uniform sampler2D tex;\n"
+                                           "void main() {\n"
+                                           "vec4 col = texture(tex, vec2(f_texcoord.x, -f_texcoord.y));\n"
+                                           "outputColor = col;\n"
+                                           "}\n");
 
     FullscreenTextureDrawer(int width, int height)
     {
-        shader = CreateProgram({
-                CreateShader(GL_VERTEX_SHADER, vertexShaderSrc), 
-                CreateShader(GL_FRAGMENT_SHADER, fragmentShaderSrc)
-        });
+        shader = CreateProgram({ CreateShader(GL_VERTEX_SHADER, vertexShaderSrc),
+                                 CreateShader(GL_FRAGMENT_SHADER, fragmentShaderSrc) });
 
         glGenBuffers(1, &positionBufferObject);
         glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); 
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
         glGenBuffers(1, &elementBufferObject);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObject);
@@ -207,8 +205,8 @@ struct FullscreenTextureDrawer
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4, 0);
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4, 
-                                                        (void*)(sizeof(GLfloat) * 2));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4,
+                              (void*)(sizeof(GLfloat) * 2));
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObject);
 
@@ -220,7 +218,6 @@ struct FullscreenTextureDrawer
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 };
-
 
 int main()
 {
@@ -253,12 +250,11 @@ int main()
 
     FullscreenTextureDrawer drawer(width, height);
 
-        tracer.load_kernels();
-        tracer.set_texture(drawer.tex, width, height);
+    tracer.load_kernels();
+    tracer.set_texture(drawer.tex, width, height);
 
-    while (!glfwWindowShouldClose(window))
-    {
-            tracer.trace();
+    while (!glfwWindowShouldClose(window)) {
+        tracer.trace();
         drawer.display();
         glfwSwapBuffers(window);
         glfwPollEvents();

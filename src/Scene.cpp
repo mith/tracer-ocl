@@ -5,29 +5,30 @@
 #include <cmath>
 
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
-    : context(context), device(device), queue(queue)
+    : context(context)
+    , device(device)
+    , queue(queue)
 {
     lightsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(lights));
-    queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0, 
+    queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
                              sizeof(lights), &lights);
 
     planesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(planes));
-    queue.enqueueWriteBuffer(planesBuffer, CL_TRUE, 0, 
+    queue.enqueueWriteBuffer(planesBuffer, CL_TRUE, 0,
                              sizeof(planes), &planes);
 
     spheresBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(spheres));
-    queue.enqueueWriteBuffer(spheresBuffer, CL_TRUE, 0, 
+    queue.enqueueWriteBuffer(spheresBuffer, CL_TRUE, 0,
                              sizeof(spheres), &spheres);
 
     trianglesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(spheres));
     queue.enqueueWriteBuffer(trianglesBuffer, CL_TRUE, 0,
-                            sizeof(triangles), &triangles);
+                             sizeof(triangles), &triangles);
 
-    materialsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, 
+    materialsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY,
                                  sizeof(materials));
-    queue.enqueueWriteBuffer(materialsBuffer, CL_TRUE, 0, 
+    queue.enqueueWriteBuffer(materialsBuffer, CL_TRUE, 0,
                              sizeof(materials), &materials);
-
 }
 
 void Scene::update()
