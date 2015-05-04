@@ -42,4 +42,8 @@ void Scene::update()
     lights[0].location.s[2] = -80.f - std::cos(x - M_PI) * 30;
     queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
                              sizeof(Light) * lights.size(), &lights);
+
+    //triangles[0].a.s[2] = -100.0f - std::sin(x - M_PI) * 40;
+    //queue.enqueueWriteBuffer(trianglesBuffer, CL_TRUE, 0,
+    //                        sizeof(triangles), &triangles);
 }

@@ -2,6 +2,7 @@
 
 #include "shader.h"
 #include "brdf.h"
+#include "intersect.h"
 
 float3 shade(float3 normal, float3 view,
              float3 lightDir, float3 halfVec,
@@ -29,6 +30,8 @@ float3 gatherLight(struct Ray ray,
                    struct RayHit hit,
                    global const struct Sphere* spheres,
                    int numSpheres,
+                   global const struct Triangle* triangles,
+                   int numTriangles,
                    global const struct Light* lights,
                    int numLights,
                    global const struct Material* materials)
@@ -46,10 +49,12 @@ float3 gatherLight(struct Ray ray,
         struct Ray rayToLight;
         rayToLight.origin = light.location;
         rayToLight.direction = lightDir;
-        if (!hitTestSpheres(rayToLight,
+        if (!occluded(rayToLight,
                             distance(hit.location,light.location),
                             spheres,
-                            numSpheres)) {
+                            numSpheres,
+                            triangles,
+                            numTriangles)) {
             float3 halfVec = normalize(lightDir + view);
             float lightDist = distance(hit.location, light.location);
             float att = clamp(1.0f - lightDist * lightDist
@@ -61,4 +66,36 @@ float3 gatherLight(struct Ray ray,
     }
     
     return color;
+}
+
+bool occluded(struct Ray ray,
+                    float targetDistance,
+                    global const struct Sphere* spheres,
+                    int numSpheres,
+                    global const struct Triangle* triangles,
+                    int numTriangles)
+{
+    float nearestDist = targetDistance - FLT_EPSILON;
+    int object = -1;
+    
+    for (int s = 0; s < numSpheres; s++) {
+        struct Sphere sphere = spheres[s];
+        float t = intersectSphere(ray, sphere);
+        if (-t < nearestDist && -t > 0.0f) {
+            nearestDist = t;
+            object = s;
+        }
+    }
+
+    struct Ray blR = ray;
+    blR.direction = -ray.direction;
+    for (int i = 0; i < numTriangles; i++) {
+        struct Triangle triangle = triangles[i];
+        float t = intersectTriangle(ray, triangle);
+        if (t < nearestDist) {
+            nearestDist = t;
+            object = i;
+        }
+    }
+    return object > -1;
 }

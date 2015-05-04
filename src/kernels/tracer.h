@@ -12,10 +12,9 @@ float3 reflect(float3 v, float3 n);
 struct RayHit traceRayAgainstSpheres(struct Ray ray,
                                      global const struct Sphere* spheres,
                                      int numSpheres);
-bool hitTestSpheres(struct Ray ray,
-                    float targetDistance,
-                    global const struct Sphere* spheres,
-                    int numSpheres);
+struct RayHit traceRayAgainstTriangles(struct Ray ray,
+                                       global const struct Triangle* triangles,
+                                       int numTriangles);
 void kernel tracer(write_only image2d_t img,
                    global const struct Light* lights,
                    int numLights,

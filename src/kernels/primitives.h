@@ -33,7 +33,10 @@ struct Material {
 };
 
 struct Triangle {
-    float3 points[3];
+    float3 a;
+    float3 b;
+    float3 c;
+    int material;
 };
 
 struct RayHit {

@@ -69,24 +69,28 @@ void CL_CALLBACK contextCallback(
     std::cerr << errInfo << std::endl;
 }
 
-std::unique_ptr<std::string> file_str (std::string filename)
+std::string file_str (std::string filename)
 {
     std::fstream txt_file(filename);
     std::stringstream txt_buf;
     txt_buf.str("");
     txt_buf << txt_file.rdbuf();
     std::string src = txt_buf.str();
-    return std::make_unique<std::string>(src.c_str());
+    return src;
 }
 
 void Tracer::load_kernels()
 {
     cl::Program::Sources sources;
 
+    std::vector<std::string> src_strs;
+
     for (auto & flnm : kernel_filenames) {
-        auto src = file_str(flnm);
-        printf("%s\n", src->c_str());
-        sources.push_back({src->c_str(), src->length()});
+        src_strs.push_back(file_str(flnm));
+    }
+
+    for (auto & src : src_strs) {
+        sources.push_back({src.c_str(), src.length()});
     }
 
     program = cl::Program(context, sources);

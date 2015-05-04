@@ -94,23 +94,35 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
     return nearestHit;
 }
 
-bool hitTestSpheres(struct Ray ray,
-                    float targetDistance,
-                    global const struct Sphere* spheres,
-                    int numSpheres)
+struct RayHit traceRayAgainstTriangles(struct Ray ray,
+                                       global const struct Triangle* triangles,
+                                       int numTriangles)
 {
-    float nearestDist = targetDistance - 0.0001f;
-    int object = -1;
+    struct RayHit nearestHit;
+    nearestHit.dist = (float)(INFINITY);
+    nearestHit.material = -1;
     
-    for (int s = 0; s < numSpheres; s++) {
-        struct Sphere sphere = spheres[s];
-        float t = intersectSphere(ray, sphere);
-        if (-t < nearestDist && -t > 0.0f) {
-            nearestDist = t;
-            object = s;
+    for (int t = 0; t < numTriangles; t++) {
+        struct Triangle triangle = triangles[t];
+        float t = intersectTriangle(ray, triangle);
+        float3 loc = rayPoint(ray, t);
+        
+        float3 v = triangle.b - triangle.a;
+        float3 w = triangle.c - triangle.a;
+        float3 normal = normalize(cross(v, w));
+        
+        float dist = distance(loc, ray.origin);
+        
+        if (nearestHit.dist > dist) {
+            nearestHit.dist = dist;
+            nearestHit.location = loc;
+            nearestHit.normal = normal;
+            nearestHit.material = triangle.material;
+            nearestHit.object = t;
         }
     }
-    return object > -1;
+    
+    return nearestHit;
 }
 
 void kernel tracer(write_only image2d_t img,
@@ -128,11 +140,17 @@ void kernel tracer(write_only image2d_t img,
     struct Ray ray = createCameraRay(coord);
     struct RayHit planeHit = traceRayAgainstPlanes(ray, planes, numPlanes);
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
+    struct RayHit triangleHit = traceRayAgainstTriangles(ray, triangles, numTriangles);
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
-    if (planeHit.dist < sphereHit.dist) {
-        color = gatherLight(ray, planeHit, spheres, numSpheres, lights, numLights, materials);
+    if (planeHit.dist < sphereHit.dist && planeHit.dist < triangleHit.dist) {
+        color = gatherLight(ray, planeHit, spheres, numSpheres, 
+                            triangles, numTriangles, lights, numLights, materials);
+    } else if (triangleHit.dist < sphereHit.dist) {
+        color = gatherLight(ray, triangleHit, spheres, numSpheres, 
+                            triangles, numTriangles, lights, numLights, materials);
     } else {
-        color = gatherLight(ray, sphereHit, spheres, numSpheres, lights, numLights, materials);
+        color = gatherLight(ray, sphereHit, spheres, numSpheres, 
+                            triangles, numTriangles, lights, numLights, materials);
     }
     write_imagef(img, coord, (float4)(color, 10.f));
 }

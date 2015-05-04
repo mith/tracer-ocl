@@ -29,5 +29,25 @@ float intersectSphere(struct Ray ray, struct Sphere sphere)
 
 float intersectTriangle(struct Ray ray, struct Triangle triangle)
 {
-    return (float)INFINITY;
+    float3 e1 = triangle.b - triangle.a;
+    float3 e2 = triangle.c - triangle.a;
+    float3 P = cross(ray.direction, e2);
+    float det = dot(e1, P);
+    if (det > -FLT_EPSILON && det < FLT_EPSILON) return INFINITY;
+
+    float inv_det = 1.0f / det;
+    float3 T = ray.origin - triangle.a;
+    float u = dot(T, P) * inv_det;
+    if (u < 0.0f || u > 1.0f) return INFINITY;
+
+    float3 Q = cross(T, e1);
+    float v = dot(ray.direction, Q) * inv_det;
+    if (v < 0.0f || u + v > 1.0f) return INFINITY;
+
+    float t = dot(e2, Q) * inv_det;
+    if (t > FLT_EPSILON) {
+        return t;
+    } else {
+        return INFINITY;
+    }
 }
