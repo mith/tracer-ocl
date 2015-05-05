@@ -38,6 +38,10 @@ Tracer::Tracer()
               << device.getInfo<CL_DEVICE_NAME>()
               << std::endl;
 
+    std::cout << "Extensions: "
+              << device.getInfo<CL_DEVICE_EXTENSIONS>()
+              << std::endl;
+
     cl_context_properties properties[] {
 #ifdef __APPLE__
         CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
@@ -102,30 +106,37 @@ void Tracer::load_kernels()
     tracer_krnl = cl::Kernel(program, "tracer");
 
     tracer_krnl.setArg(1, scene->lightsBuffer);
-    tracer_krnl.setArg(2, scene->lights.size());
+    tracer_krnl.setArg(2, (cl_int)scene->lights.size());
 
     tracer_krnl.setArg(3, scene->planesBuffer);
-    tracer_krnl.setArg(4, scene->planes.size());
+    tracer_krnl.setArg(4, (cl_int)scene->planes.size());
 
     tracer_krnl.setArg(5, scene->spheresBuffer);
-    tracer_krnl.setArg(6, scene->spheres.size());
+    tracer_krnl.setArg(6, (cl_int)scene->spheres.size());
 
     tracer_krnl.setArg(7, scene->trianglesBuffer);
-    tracer_krnl.setArg(8, scene->triangles.size());
+    tracer_krnl.setArg(8, (cl_int)scene->triangles.size());
 
     tracer_krnl.setArg(9, scene->materialsBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)
 {
-    this->width = width;
-    this->height = height;
-    tex = cl::ImageGL(context,
-                      CL_MEM_WRITE_ONLY,
-                      GL_TEXTURE_2D,
-                      0,
-                      texid);
-    tracer_krnl.setArg(0, tex);
+    try {
+        this->width = width;
+        this->height = height;
+        tex = cl::ImageGL(context,
+                          CL_MEM_WRITE_ONLY,
+                          GL_TEXTURE_2D,
+                          0,
+                          texid);
+        tracer_krnl.setArg(0, tex);
+    } catch (cl::Error err) {
+        std::cerr << "Error setting texture kernel arg, "
+                  << err.what()
+                  << std::endl;
+        throw(err);
+    }
 }
 
 void Tracer::trace()
