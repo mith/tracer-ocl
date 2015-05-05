@@ -18,6 +18,7 @@ float3 gatherLight(struct Ray ray,
                    global const struct Material* materials);
 bool occluded(struct Ray ray,
                     float targetDistance,
+                    global const void* ignoredObject,
                     global const struct Sphere* spheres,
                     int numSpheres,
                     global const struct Triangle* triangles,

@@ -44,7 +44,7 @@ struct RayHit {
     float3 normal;
     float dist;
     int material;
-    int object;
+    global const void* object;
 };
 
 // struct RayHit {

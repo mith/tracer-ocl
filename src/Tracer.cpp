@@ -67,6 +67,12 @@ Tracer::Tracer()
 
     auto max_group_size = device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
     group_size = std::sqrt(max_group_size);
+
+    std::cout << "Group size: " << group_size << std::endl;
+
+    std::cout << "Local memory size: " 
+              << device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>()
+              << std::endl;
 }
 
 void CL_CALLBACK contextCallback(
@@ -148,8 +154,6 @@ void Tracer::trace()
 {
     scene->update();
 
-    std::cout << "width: " << width << " height: " << height << std::endl;
-    
     std::vector<cl::Memory> mem_objs = {tex};
     glFlush();
     queue.enqueueAcquireGLObjects(&mem_objs, nullptr);

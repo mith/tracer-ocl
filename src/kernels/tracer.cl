@@ -60,7 +60,7 @@ struct RayHit traceRayAgainstPlanes(struct Ray ray,
             nearestHit.location = loc;
             nearestHit.normal = plane.normal;
             nearestHit.material = plane.material;
-            nearestHit.object = p;
+            nearestHit.object = &planes[p];
         }
     }
     return nearestHit;
@@ -87,7 +87,7 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
             nearestHit.location = loc;
             nearestHit.normal = normal;
             nearestHit.material = sphere.material;
-            nearestHit.object = s;
+            nearestHit.object = &spheres[s];
         }
     }
 
@@ -102,8 +102,8 @@ struct RayHit traceRayAgainstTriangles(struct Ray ray,
     nearestHit.dist = (float)(INFINITY);
     nearestHit.material = -1;
 
-    for (int t = 0; t < numTriangles; t++) {
-        struct Triangle triangle = triangles[t];
+    for (int i = 0; i < numTriangles; i++) {
+        struct Triangle triangle = triangles[i];
         float t = intersectTriangle(ray, triangle);
         float3 loc = rayPoint(ray, t);
 
@@ -118,7 +118,7 @@ struct RayHit traceRayAgainstTriangles(struct Ray ray,
             nearestHit.location = loc;
             nearestHit.normal = normal;
             nearestHit.material = triangle.material;
-            nearestHit.object = t;
+            nearestHit.object = &triangles[i];
         }
     }
 
