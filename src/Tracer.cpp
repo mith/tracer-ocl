@@ -5,6 +5,8 @@
 #include <GL/glx.h>
 #endif
 
+#include <cmath>
+
 Tracer::Tracer()
 {
     std::vector<cl::Platform> all_platforms;
@@ -62,6 +64,9 @@ Tracer::Tracer()
     queue = cl::CommandQueue(context, device);
 
     scene = std::make_unique<Scene>(context, device, queue);
+
+    auto max_group_size = device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
+    group_size = std::sqrt(max_group_size);
 }
 
 void CL_CALLBACK contextCallback(
@@ -143,12 +148,14 @@ void Tracer::trace()
 {
     scene->update();
 
+    std::cout << "width: " << width << " height: " << height << std::endl;
+    
     std::vector<cl::Memory> mem_objs = {tex};
     glFlush();
     queue.enqueueAcquireGLObjects(&mem_objs, nullptr);
     queue.enqueueNDRangeKernel(tracer_krnl, cl::NullRange,
                                        cl::NDRange(width, height),
-                                       cl::NDRange(32, 32),
+                                       cl::NDRange(group_size, group_size),
                                        nullptr);
     queue.enqueueReleaseGLObjects(&mem_objs, nullptr);
     queue.finish();
