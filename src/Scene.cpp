@@ -40,11 +40,13 @@ void Scene::update()
     queue.enqueueWriteBuffer(spheresBuffer, CL_TRUE, 0,
                              sizeof(Sphere) * spheres.size(), &spheres);
 
-    lights[0].location.s[2] = -80.f - std::cos(x - M_PI) * 30;
-    queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
-                             sizeof(Light) * lights.size(), &lights);
+    //lights[0].location.s[2] = -80.f - std::cos(x - M_PI) * 30;
+    //queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
+    //                         sizeof(Light) * lights.size(), &lights);
 
-    //triangles[0].a.s[2] = -100.0f - std::sin(x - M_PI) * 40;
-    //queue.enqueueWriteBuffer(trianglesBuffer, CL_TRUE, 0,
-    //                        sizeof(triangles), &triangles);
+    triangles[0].a.s[0] = -10.0f - std::sin(x - M_PI) * 40;
+    triangles[0].b.s[0] = 10.0f - std::sin(x - M_PI) * 40;
+    triangles[0].c.s[0] = 20.0f - std::sin(x - M_PI) * 40;
+    queue.enqueueWriteBuffer(trianglesBuffer, CL_TRUE, 0,
+                            sizeof(triangles), &triangles);
 }
