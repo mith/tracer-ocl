@@ -6,7 +6,7 @@
 
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
     : context(context)
-    , device(device)
+    , device(std::move(device))
     , queue(queue)
 {
     lightsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(lights));

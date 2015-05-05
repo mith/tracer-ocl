@@ -16,7 +16,7 @@
 #include <GLFW/glfw3.h>
 
 #include "cl.hpp"
-#include "Tracer.h"
+#include "Tracer.hpp"
 
 void glfw_error(int error, const char* description)
 {
@@ -60,7 +60,7 @@ GLuint CreateShader(GLenum eShaderType, const std::string& strShaderFile)
 {
     GLuint shader = glCreateShader(eShaderType);
     const char* strFileData = strShaderFile.c_str();
-    glShaderSource(shader, 1, &strFileData, NULL);
+    glShaderSource(shader, 1, &strFileData, nullptr);
 
     glCompileShader(shader);
 
@@ -70,10 +70,10 @@ GLuint CreateShader(GLenum eShaderType, const std::string& strShaderFile)
         GLint infoLogLength;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-        GLchar* strInfoLog = new GLchar[infoLogLength + 1];
-        glGetShaderInfoLog(shader, infoLogLength, NULL, strInfoLog);
+        auto strInfoLog = std::vector<GLchar>(infoLogLength + 1);
+        glGetShaderInfoLog(shader, infoLogLength, nullptr, strInfoLog.data());
 
-        const char* strShaderType = NULL;
+        const char* strShaderType = nullptr;
         switch (eShaderType) {
         case GL_VERTEX_SHADER:
             strShaderType = "vertex";
@@ -84,8 +84,7 @@ GLuint CreateShader(GLenum eShaderType, const std::string& strShaderFile)
         }
 
         fprintf(stderr, "Compile failure in %s shader:\n%s\n", strShaderType,
-                strInfoLog);
-        delete[] strInfoLog;
+                strInfoLog.data());
     }
 
     return shader;
@@ -107,8 +106,8 @@ GLuint CreateProgram(const std::vector<GLuint>& shaderList)
         GLint infoLogLength;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-        GLchar* strInfoLog = new GLchar[infoLogLength + 1];
-        glGetProgramInfoLog(program, infoLogLength, NULL, strInfoLog);
+        auto  strInfoLog = new GLchar[infoLogLength + 1];
+        glGetProgramInfoLog(program, infoLogLength, nullptr, strInfoLog);
         fprintf(stderr, "Linker failure: %s\n", strInfoLog);
         delete[] strInfoLog;
     }
@@ -203,7 +202,7 @@ struct FullscreenTextureDrawer {
         glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4, 0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4, nullptr);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4,
                               (void*)(sizeof(GLfloat) * 2));
@@ -215,7 +214,7 @@ struct FullscreenTextureDrawer {
         glGenerateMipmap(GL_TEXTURE_2D);
         glUniform1i(glGetUniformLocation(shader, "tex"), 0);
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     }
 };
 
