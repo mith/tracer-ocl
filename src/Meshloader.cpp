@@ -42,22 +42,12 @@ Mesh load_mesh(std::string filename)
         mesh.positions.emplace_back(v.a);
     }
 
-    std::cout << "vertices: " << std::endl;
-    for (auto & p : mesh.positions) {
-        std::cout << p << std::endl;
-    }
-
     const id* triangles = reinterpret_cast<const id*>(mesh_file.data() + ih->ofs_triangles);
     for(unsigned int i = 0; i < ih->num_triangles; i++) {
         auto t = triangles[i];
         mesh.triangles.emplace_back(t.a);
     }
 
-    std::cout << std::endl << "indices: " << std::endl;
-    for (auto & t : mesh.triangles) {
-        std::cout << t << std::endl;
-    }
-    std::cout << std::endl;
     return mesh;
 }
 
