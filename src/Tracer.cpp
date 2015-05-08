@@ -128,8 +128,9 @@ void Tracer::load_kernels()
     tracer_krnl.setArg(7, scene->vertexBuffer);
     tracer_krnl.setArg(8, scene->triangleBuffer);
     tracer_krnl.setArg(9, scene->meshesBuffer);
+    tracer_krnl.setArg(10, 1);
 
-    tracer_krnl.setArg(10, scene->materialsBuffer);
+    tracer_krnl.setArg(11, scene->materialsBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)
