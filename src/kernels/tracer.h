@@ -12,9 +12,19 @@ float3 reflect(float3 v, float3 n);
 struct RayHit traceRayAgainstSpheres(struct Ray ray,
                                      global const struct Sphere* spheres,
                                      int numSpheres);
-struct RayHit traceRayAgainstTriangles(struct Ray ray,
-                                       global const struct Triangle* triangles,
-                                       int numTriangles);
+//struct RayHit traceRayAgainstTriangles(struct Ray ray,
+//                                       global const struct Vertex* triangles,
+//                                       int numTriangles);
+struct Triangle constructTriangle(global const struct Vertex* vertices,
+                                  global const struct Indices* indices,
+                                  int numTriangle,
+                                  float3 translate,
+                                  float3 scale);
+struct RayHit traceRayAgainstMeshes(struct Ray ray,
+                                    global const struct Vertex* vertices,
+                                    global const struct Indices* indices,
+                                    global const struct Mesh* meshes,
+                                    int numMeshes);
 void kernel tracer(write_only image2d_t img,
                    global const struct Light* lights,
                    int numLights,
@@ -22,6 +32,7 @@ void kernel tracer(write_only image2d_t img,
                    int numPlanes,
                    global const struct Sphere* spheres,
                    int numSpheres,
-                   global const struct Triangle* triangles,
-                   int numTriangles,
+                   global const struct Vertex* vertices,
+                   global const struct Indices* indices,
+                   global const struct Mesh* meshes,
                    global const struct Material* materials);

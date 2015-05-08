@@ -1,5 +1,6 @@
 #include "Tracer.hpp"
 #include <fstream>
+#include <boost/iostreams/device/mapped_file.hpp>
 
 #ifdef __linux__
 #include <GL/glx.h>
@@ -86,11 +87,10 @@ void CL_CALLBACK contextCallback(
 
 std::string file_str (std::string filename)
 {
-    std::fstream txt_file(filename);
-    std::stringstream txt_buf;
-    txt_buf.str("");
-    txt_buf << txt_file.rdbuf();
-    std::string src = txt_buf.str();
+    using namespace boost::iostreams;
+    mapped_file_source txt_file(filename);
+    std::string src(txt_file.data(), txt_file.size());
+    txt_file.close();
     return src;
 }
 
@@ -125,10 +125,11 @@ void Tracer::load_kernels()
     tracer_krnl.setArg(5, scene->spheresBuffer);
     tracer_krnl.setArg(6, (cl_int)scene->spheres.size());
 
-    tracer_krnl.setArg(7, scene->trianglesBuffer);
-    tracer_krnl.setArg(8, (cl_int)scene->triangles.size());
+    tracer_krnl.setArg(7, scene->vertexBuffer);
+    tracer_krnl.setArg(8, scene->triangleBuffer);
+    tracer_krnl.setArg(9, scene->meshesBuffer);
 
-    tracer_krnl.setArg(9, scene->materialsBuffer);
+    tracer_krnl.setArg(10, scene->materialsBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)

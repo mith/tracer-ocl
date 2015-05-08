@@ -94,36 +94,91 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
     return nearestHit;
 }
 
-struct RayHit traceRayAgainstTriangles(struct Ray ray,
-                                       global const struct Triangle* triangles,
-                                       int numTriangles)
+struct Triangle constructTriangle(global const struct Vertex* vertices,
+                                  global const struct Indices* indices,
+                                  int numTriangle,
+                                  float3 translate,
+                                  float3 scale)
+{
+    uint3 i = indices[numTriangle].t;
+    struct Triangle triangle;
+    triangle.a = vertices[i[0]].v * scale + translate;
+    triangle.b = vertices[i[1]].v * scale + translate;
+    triangle.c = vertices[i[2]].v * scale + translate;
+
+    return triangle;
+}
+
+struct RayHit traceRayAgainstMeshes(struct Ray ray,
+                                    global const struct Vertex* vertices,
+                                    global const struct Indices* indices,
+                                    global const struct Mesh* meshes,
+                                    int numMeshes)
 {
     struct RayHit nearestHit;
     nearestHit.dist = (float)(INFINITY);
-    nearestHit.material = -1;
+    for (int m = 0; m < numMeshes; m++) {
+        struct Mesh mesh = meshes[m];
+        for (int p = 0; p < mesh.num_triangles; p++) {
+            struct Triangle triangle = constructTriangle(vertices, indices, p,
+                                                         mesh.translate, mesh.scale);
+            float t = intersectTriangle(ray, triangle);
+            float3 loc = rayPoint(ray, t);
 
-    for (int i = 0; i < numTriangles; i++) {
-        struct Triangle triangle = triangles[i];
-        float t = intersectTriangle(ray, triangle);
-        float3 loc = rayPoint(ray, t);
+            float3 v = triangle.b - triangle.a;
+            float3 w = triangle.c - triangle.a;
+            float3 normal = normalize(cross(v, w));
 
-        float3 v = triangle.b - triangle.a;
-        float3 w = triangle.c - triangle.a;
-        float3 normal = normalize(cross(v, w));
+            float dist = distance(loc, ray.origin);
 
-        float dist = distance(loc, ray.origin);
-
-        if (nearestHit.dist > dist) {
-            nearestHit.dist = dist;
-            nearestHit.location = loc;
-            nearestHit.normal = normal;
-            nearestHit.material = triangle.material;
-            nearestHit.object = &triangles[i];
+            if (nearestHit.dist > dist) {
+                nearestHit.dist = dist;
+                nearestHit.location = loc;
+                nearestHit.normal = -normal;
+                nearestHit.material = mesh.material;
+                nearestHit.object = &indices[p];
+            }
         }
     }
-
     return nearestHit;
 }
+
+//struct RayHit traceRayAgainstTriangles(struct Ray ray,
+//                                       global const struct Vertex* vertices,
+//                                       int numTriangles)
+//{
+//    struct RayHit nearestHit;
+//    nearestHit.dist = (float)(INFINITY);
+//    nearestHit.material = -1;
+//    nearestHit.normal = (float3)(0.0f, 0.0f, 0.0f);
+//
+//    for (int i = 0; i < numTriangles; i++) {
+//        struct Triangle triangle;
+//        triangle.a = vertices[i].v;
+//        i++;
+//        triangle.c = vertices[i].v;
+//        i++;
+//        triangle.b = vertices[i].v;
+//        float t = intersectTriangle(ray, triangle);
+//        float3 loc = rayPoint(ray, t);
+//
+//        float3 v = triangle.b - triangle.a;
+//        float3 w = triangle.c - triangle.a;
+//        float3 normal = normalize(cross(v, w));
+//
+//        float dist = distance(loc, ray.origin);
+//
+//        if (nearestHit.dist > dist) {
+//            nearestHit.dist = dist;
+//            nearestHit.location = loc;
+//            nearestHit.normal = normal;
+//            nearestHit.material = (int)3;
+//            nearestHit.object = 0;//&vertices[i];
+//        }
+//    }
+//
+//    return nearestHit;
+//}
 
 void kernel tracer(write_only image2d_t img,
                    global const struct Light* lights,
@@ -132,25 +187,27 @@ void kernel tracer(write_only image2d_t img,
                    int numPlanes,
                    global const struct Sphere* spheres,
                    int numSpheres,
-                   global const struct Triangle* triangles,
-                   int numTriangles,
+                   global const struct Vertex* vertices,
+                   global const struct Indices* indices,
+                   global const struct Mesh* meshes,
                    global const struct Material* materials)
 {
     const int2 coord = (int2)(get_global_id(0), get_global_id(1));
     struct Ray ray = createCameraRay(coord);
     struct RayHit planeHit = traceRayAgainstPlanes(ray, planes, numPlanes);
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
-    struct RayHit triangleHit = traceRayAgainstTriangles(ray, triangles, numTriangles);
+    struct RayHit meshHit = traceRayAgainstMeshes(ray, vertices, indices, meshes, 1);
+    //struct RayHit triangleHit = traceRayAgainstTriangles(ray, vertices, 12);
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
-    if (planeHit.dist < sphereHit.dist && planeHit.dist < triangleHit.dist) {
+    if (planeHit.dist < sphereHit.dist && planeHit.dist < meshHit.dist) {
         color = gatherLight(ray, planeHit, spheres, numSpheres,
-                            triangles, numTriangles, lights, numLights, materials);
-    } else if (triangleHit.dist < sphereHit.dist) {
-        color = gatherLight(ray, triangleHit, spheres, numSpheres,
-                            triangles, numTriangles, lights, numLights, materials);
-    } else {
+                            lights, numLights, materials);
+    } else if (sphereHit.dist < meshHit.dist) {
         color = gatherLight(ray, sphereHit, spheres, numSpheres,
-                            triangles, numTriangles, lights, numLights, materials);
+                            lights, numLights, materials);
+    } else {
+        color = gatherLight(ray, meshHit, spheres, numSpheres,
+                            lights, numLights, materials);
     }
-    write_imagef(img, coord, (float4)(color, 10.f));
+    write_imagef(img, coord, (float4)(color, 1.0f));
 }

@@ -32,11 +32,26 @@ struct Material {
     float roughness;
 };
 
+struct Mesh {
+    int num_triangles;
+    int material;
+
+    float3 translate;
+    float3 scale;
+};
+
+struct Vertex {
+    float3 v;
+};
+
+struct Indices {
+    uint3 t;
+};
+
 struct Triangle {
     float3 a;
     float3 b;
     float3 c;
-    int material;
 };
 
 struct RayHit {
@@ -46,12 +61,5 @@ struct RayHit {
     int material;
     global const void* object;
 };
-
-// struct RayHit {
-//     float3 normal;
-//     float3 incidence;
-//     float3 location;
-//     int material;
-// };
 
 #endif

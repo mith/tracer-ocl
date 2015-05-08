@@ -30,8 +30,6 @@ float3 gatherLight(struct Ray ray,
                    struct RayHit hit,
                    global const struct Sphere* spheres,
                    int numSpheres,
-                   global const struct Triangle* triangles,
-                   int numTriangles,
                    global const struct Light* lights,
                    int numLights,
                    global const struct Material* materials)
@@ -53,9 +51,7 @@ float3 gatherLight(struct Ray ray,
                             distance(hit.location,light.location),
                             hit.object,
                             spheres,
-                            numSpheres,
-                            triangles,
-                            numTriangles)) {
+                            numSpheres)) {
             float3 halfVec = normalize(lightDir + view);
             float lightDist = distance(hit.location, light.location);
             float att = clamp(1.0f - lightDist * lightDist
@@ -73,9 +69,7 @@ bool occluded(struct Ray ray,
               float targetDistance,
               global const void* ignoredObject,
               global const struct Sphere* spheres,
-              int numSpheres,
-              global const struct Triangle* triangles,
-              int numTriangles)
+              int numSpheres)
 {
     float nearestDist = targetDistance;
     int object = -1;
@@ -92,16 +86,5 @@ bool occluded(struct Ray ray,
         }
     }
 
-    for (int i = 0; i < numTriangles; i++) {
-        if (&triangles[i] == ignoredObject)
-            continue;
-
-        struct Triangle triangle = triangles[i];
-        float t = intersectTriangle(ray, triangle);
-        if (t < nearestDist && t > 0.0f) {
-            nearestDist = t;
-            object = i;
-        }
-    }
     return object > -1;
 }

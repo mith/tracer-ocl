@@ -120,11 +120,6 @@ GLuint CreateProgram(const std::vector<GLuint>& shaderList)
     return program;
 }
 
-struct Vertex {
-    float position[2];
-    float uvcoord[2];
-};
-
 struct FullscreenTextureDrawer {
     GLuint shader;
     GLuint positionBufferObject;
