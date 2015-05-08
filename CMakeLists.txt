@@ -8,8 +8,8 @@ find_package(Boost REQUIRED COMPONENTS iostreams)
 pkg_search_module(GLFW REQUIRED glfw3)
 
 add_executable(tracer-ocl src/main.cpp src/Tracer.cpp src/Scene.cpp src/Meshloader.cpp)
-set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD 11)
-set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD_REQUIRED 11)
+set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD 14)
+set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD_REQUIRED 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic") 
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/usr/local/lib")
 include_directories("./include" 
