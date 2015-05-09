@@ -94,9 +94,9 @@ struct Triangle constructTriangle(global const struct Vertex* vertices,
 {
     uint3 i = indices[numTriangle].t;
     struct Triangle triangle;
-    triangle.a = vertices[i[0]].v * scale + translate;
-    triangle.b = vertices[i[1]].v * scale + translate;
-    triangle.c = vertices[i[2]].v * scale + translate;
+    triangle.a = vertices[i.x].v * scale + translate;
+    triangle.b = vertices[i.y].v * scale + translate;
+    triangle.c = vertices[i.z].v * scale + translate;
 
     return triangle;
 }
