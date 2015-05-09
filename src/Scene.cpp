@@ -7,7 +7,7 @@
 
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
     : context(context)
-    , device(std::move(device))
+    , device(device)
     , queue(queue)
 {
     lightsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(lights));
@@ -49,6 +49,10 @@ Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
                               sizeof(CLMesh)); 
     queue.enqueueWriteBuffer(meshesBuffer, CL_TRUE, 0,
                              sizeof(CLMesh), &cm);
+
+    aabbsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(aabbs));
+    queue.enqueueWriteBuffer(aabbsBuffer, CL_FALSE, 0,
+                             sizeof(aabbs), &aabbs);
 }
 
 void Scene::update()

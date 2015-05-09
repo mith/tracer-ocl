@@ -136,7 +136,10 @@ void Tracer::load_kernels()
     tracer_krnl.setArg(9, scene->meshesBuffer);
     tracer_krnl.setArg(10, 1);
 
-    tracer_krnl.setArg(11, scene->materialsBuffer);
+    tracer_krnl.setArg(11, scene->aabbsBuffer);
+    tracer_krnl.setArg(12, (cl_int)scene->aabbs.size());
+
+    tracer_krnl.setArg(13, scene->materialsBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)

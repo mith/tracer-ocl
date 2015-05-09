@@ -51,3 +51,27 @@ float intersectTriangle(struct Ray ray, struct Triangle triangle)
         return INFINITY;
     }
 }
+
+float intersectAABB(struct Ray ray, struct AABB aabb)
+{
+    float tx1 = (aabb.min.x - ray.origin.x) * ray.direction_inverse.x;
+    float tx2 = (aabb.max.x - ray.origin.x) * ray.direction_inverse.x;
+
+    float tmin = min(tx1, tx2);
+    float tmax = max(tx1, tx2);
+
+    float ty1 = (aabb.min.y - ray.origin.y) * ray.direction_inverse.y;
+    float ty2 = (aabb.max.y - ray.origin.y) * ray.direction_inverse.y;
+
+    tmin = max(tmin, min(ty1, ty2));
+    tmax = min(tmax, max(ty1, ty2));
+
+    float tz1 = (aabb.min.z - ray.origin.z) * ray.direction_inverse.z;
+    float tz2 = (aabb.max.z - ray.origin.z) * ray.direction_inverse.z;
+
+    tmin = max(tmin, min(tz1, tz2));
+    tmax = min(tmax, max(tz1, tz2));
+
+    return tmax >= max(tmin, 0.0f);
+}
+

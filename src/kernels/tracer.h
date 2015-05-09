@@ -33,4 +33,6 @@ void kernel tracer(write_only image2d_t img,
                    global const struct Indices* indices,
                    global const struct Mesh* meshes,
                    int numMeshes,
+                   global const struct AABB* aabbs,
+                   int numAABBs,
                    global const struct Material* materials);

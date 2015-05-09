@@ -94,11 +94,12 @@ struct CLMesh {
     cl_float3 scale;
 };
 
-struct vt {
-    std::array<float, 3> a;
-};
+struct AABB {
+    cl_float3 min;
+    cl_float3 max;
 
-struct id {
-    std::array<unsigned int, 3> a;
+    AABB (cl_float3 min, cl_float3 max)
+        : min(min)
+        , max(max)
+    {}
 };
-

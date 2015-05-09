@@ -17,6 +17,7 @@ struct Ray createCameraRay(int2 coord)
                                        coord.y * y_ratio - 0.5f,
                                        -0.7f));
     ray.origin = (float3)(0.0f, 0.0f, 0.0f);
+    ray.direction_inverse = 1.0f / ray.direction;
     return ray;
 }
 
@@ -143,13 +144,21 @@ void kernel tracer(write_only image2d_t img,
                    global const struct Indices* indices,
                    global const struct Mesh* meshes,
                    int numMeshes,
+                   global const struct AABB* aabbs,
+                   int numAABBs,
                    global const struct Material* materials)
 {
     const int2 coord = (int2)(get_global_id(0), get_global_id(1));
     struct Ray ray = createCameraRay(coord);
     struct RayHit planeHit = traceRayAgainstPlanes(ray, planes, numPlanes);
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
-    struct RayHit meshHit = traceRayAgainstMeshes(ray, vertices, indices, meshes, numMeshes);
+    struct RayHit meshHit;
+    meshHit.dist = INFINITY;
+    if (intersectAABB(ray, aabbs[0])) {
+        meshHit = traceRayAgainstMeshes(ray, vertices, indices, meshes, numMeshes);
+    } 
+
+
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist && planeHit.dist < meshHit.dist) {
         color = gatherLight(ray, planeHit, spheres, numSpheres,

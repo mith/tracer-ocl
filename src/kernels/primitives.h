@@ -6,18 +6,15 @@
 struct Ray {
     float3 origin;
     float3 direction;
+    float3 direction_inverse;
 };
 
-struct Plane {
+struct RayHit {
+    float3 location;
     float3 normal;
-    float offset;
+    float dist;
     int material;
-};
-
-struct Sphere {
-    float3 center;
-    float radius;
-    int material;
+    global const void* object;
 };
 
 struct Light {
@@ -30,6 +27,18 @@ struct Material {
     float3 color;
     float fresnel0;
     float roughness;
+};
+
+struct Plane {
+    float3 normal;
+    float offset;
+    int material;
+};
+
+struct Sphere {
+    float3 center;
+    float radius;
+    int material;
 };
 
 struct Mesh {
@@ -54,12 +63,9 @@ struct Triangle {
     float3 c;
 };
 
-struct RayHit {
-    float3 location;
-    float3 normal;
-    float dist;
-    int material;
-    global const void* object;
+struct AABB {
+    float3 min;
+    float3 max;
 };
 
 #endif

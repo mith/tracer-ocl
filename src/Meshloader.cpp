@@ -36,16 +36,16 @@ Mesh load_mesh(std::string filename)
     mesh.positions.reserve(ih->num_vertexes);
     mesh.triangles.reserve(ih->num_triangles);
 
-    const vt* vertices = reinterpret_cast<const vt*>(mesh_file.data() + iva->offset);
+    auto vertices = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + iva->offset);
     for(unsigned int i = 0; i < ih->num_vertexes; i++) {
         auto v = vertices[i];
-        mesh.positions.emplace_back(v.a);
+        mesh.positions.emplace_back(v);
     }
 
-    const id* triangles = reinterpret_cast<const id*>(mesh_file.data() + ih->ofs_triangles);
+    auto triangles = reinterpret_cast<const std::array<unsigned int, 3>*>(mesh_file.data() + ih->ofs_triangles);
     for(unsigned int i = 0; i < ih->num_triangles; i++) {
         auto t = triangles[i];
-        mesh.triangles.emplace_back(t.a);
+        mesh.triangles.emplace_back(t);
     }
 
     return mesh;

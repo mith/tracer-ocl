@@ -44,6 +44,8 @@ struct Scene {
               Material({ { 1.0 / M_PI, 1.0 / M_PI, 1.0 / M_PI } }, fresnel0 * fresnel0, 0.7),
               Material({ { 1.0 / M_PI, 0.5 / M_PI, 0.5 / M_PI } }, fresnel0 * fresnel0, 0.9) } };
 
+    std::array<AABB, 1> aabbs = {{ AABB({ -35.0f, 20.0f, -90.0f }, { -25.0f, 0.0f, -70.0f }) }};
+
     cl::Buffer lightsBuffer;
     cl::Buffer planesBuffer;
     cl::Buffer spheresBuffer;
@@ -51,6 +53,7 @@ struct Scene {
     cl::Buffer vertexBuffer;
     cl::Buffer triangleBuffer;
     cl::Buffer meshesBuffer;
+    cl::Buffer aabbsBuffer;
 
     cl::Context context;
     cl::Device device;
