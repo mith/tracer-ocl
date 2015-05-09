@@ -48,15 +48,9 @@ struct RayHit traceRayAgainstPlanes(struct Ray ray,
 
         float t = intersectPlane(ray, plane);
 
-        if (t < FLT_EPSILON) {
-            continue;
-        }
-
-        float3 loc = rayPoint(ray, t);
-        float dist = distance(ray.origin, loc);
-
-        if (nearestHit.dist > dist) {
-            nearestHit.dist = dist;
+        if (nearestHit.dist > t && t > 0.0f) {
+            float3 loc = rayPoint(ray, t);
+            nearestHit.dist = t;
             nearestHit.location = loc;
             nearestHit.normal = plane.normal;
             nearestHit.material = plane.material;
@@ -77,10 +71,10 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
     for (int s = 0; s < numSpheres; s++) {
         struct Sphere sphere = spheres[s];
         float t = intersectSphere(ray, sphere);
-        float3 loc = rayPoint(ray, t);
-        float3 normal = normalize(loc - sphere.center);
 
-        if (nearestHit.dist > t) {
+        if (nearestHit.dist > t && t > 0.0f) {
+            float3 loc = rayPoint(ray, t);
+            float3 normal = normalize(loc - sphere.center);
             nearestHit.dist = t;
             nearestHit.location = loc;
             nearestHit.normal = normal;
@@ -121,13 +115,12 @@ struct RayHit traceRayAgainstMeshes(struct Ray ray,
             struct Triangle triangle = constructTriangle(vertices, indices, p,
                                                          mesh.translate, mesh.scale);
             float t = intersectTriangle(ray, triangle);
-            float3 loc = rayPoint(ray, t);
 
-            float3 v = triangle.b - triangle.a;
-            float3 w = triangle.c - triangle.a;
-            float3 normal = normalize(cross(v, w));
-
-            if (nearestHit.dist > t) {
+            if (nearestHit.dist > t && t > 0.0f) {
+                float3 loc = rayPoint(ray, t);
+                float3 v = triangle.b - triangle.a;
+                float3 w = triangle.c - triangle.a;
+                float3 normal = normalize(cross(v, w));
                 nearestHit.dist = t;
                 nearestHit.location = loc;
                 nearestHit.normal = -normal;
