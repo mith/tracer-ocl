@@ -109,7 +109,13 @@ void Tracer::load_kernels()
     }
 
     program = cl::Program(context, sources);
+    try {
     if(program.build({device}, "-I ./kernels/") != CL_SUCCESS) {
+        std::cerr << "error building: "
+                  << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
+                  << std::endl;
+    }
+    } catch (cl::Error err) {
         std::cerr << "error building: "
                   << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
                   << std::endl;
