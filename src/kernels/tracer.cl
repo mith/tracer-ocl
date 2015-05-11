@@ -143,7 +143,13 @@ struct RayHit traceRayAgainstBVH(struct Ray ray,
     nearestHit.dist = (float)(INFINITY);
     for (int b = 0; b < numBVHNodes; b++) {
         struct BVHNode bvhnode = bvh[b];
-        if (false) {//intersectAABB(ray, bvhnode.bounds)) {
+        bvhnode.bounds.min = bvhnode.bounds.min
+                           //* bvhnode.scale
+                           + bvhnode.position;
+        bvhnode.bounds.max = bvhnode.bounds.max
+                           //* bvhnode.scale
+                           + bvhnode.position;
+        if (intersectAABB(ray, bvhnode.bounds)) {
             struct RayHit hit = traceRayAgainstMesh(ray, vertices, indices, meshes, bvhnode.mesh);
             if (hit.dist < nearestHit.dist) {
                 nearestHit = hit;
