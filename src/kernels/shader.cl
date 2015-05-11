@@ -82,10 +82,10 @@ bool occluded(struct Ray ray,
     for (int b = 0; b < geometry.numBVHNodes; b++) {
         struct BVHNode bvhnode = geometry.bvh[b];
         bvhnode.bounds.min = bvhnode.bounds.min
-                           //* bvhnode.scale
+                           * bvhnode.scale
                            + bvhnode.position;
         bvhnode.bounds.max = bvhnode.bounds.max
-                           //* bvhnode.scale
+                           * bvhnode.scale
                            + bvhnode.position;
         if (intersectAABB(ray, bvhnode.bounds)) {
      

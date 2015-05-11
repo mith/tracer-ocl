@@ -32,7 +32,7 @@ spheres:
 meshes:
     - file: "tetrahedron.iqm"
       position: [-30.0, 10.0, -80.0]
-      scale: [2.0, 2.0, 2.0]
+      scale: [1.5, 1.5, 1.5]
       material: 1
     - file: "suzanne.iqm"
       position: [20.0, 20.0, -80.0]
@@ -45,7 +45,7 @@ meshes:
 
 lights:
     - color: [3.0, 3.0, 3.0]
-      location: [0.0, 40.0, -70.0]
+      location: [0.0, 30.0, -70.0]
       radius: 120
 
 materials:
