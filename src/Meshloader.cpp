@@ -8,45 +8,57 @@
 std::ostream& operator<<(std::ostream& strm, const Vertex& v)
 {
     return strm << "("
-                << v.v.s[0] << ", "
-                << v.v.s[1] << ", "
-                << v.v.s[2] << ")";
+                << v.position.x << ", "
+                << v.position.y << ", "
+                << v.position.z << ")";
 
 }
 
-std::ostream& operator<<(std::ostream& strm, const Triangle& t)
+std::ostream& operator<<(std::ostream& strm, const Indice& t)
 {
     return strm << "("
-                << t.i.s[0] << ", "
-                << t.i.s[1] << ", "
-                << t.i.s[2] << ")";
+                << t.i.x << ", "
+                << t.i.y << ", "
+                << t.i.z << ")";
 }
 
 Mesh load_mesh(std::string filename)
 {
     using namespace boost::iostreams;
 
-    mapped_file_source mesh_file(filename);
+    mapped_file_source mesh_file("../meshes/" + filename);
 
     const iqmheader* ih = reinterpret_cast<const iqmheader*>(mesh_file.data());
 
     const iqmvertexarray* iva = reinterpret_cast<const iqmvertexarray*>(mesh_file.data() + ih->ofs_vertexarrays);
 
     Mesh mesh;
-    mesh.positions.reserve(ih->num_vertexes);
-    mesh.triangles.reserve(ih->num_triangles);
+    mesh.vertices.reserve(ih->num_vertexes);
+    mesh.indices.reserve(ih->num_triangles);
+
+    std::array<float, 3> min;
+    std::array<float, 3> max;
 
     auto vertices = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + iva->offset);
     for(unsigned int i = 0; i < ih->num_vertexes; i++) {
         auto v = vertices[i];
-        mesh.positions.emplace_back(v);
+
+        for (int j = 0; j < 3; j++) {
+            min[j] = std::min(v[j], min[j]);
+            max[j] = std::max(v[j], max[j]);
+        }
+
+        mesh.vertices.emplace_back(v);
     }
 
     auto triangles = reinterpret_cast<const std::array<unsigned int, 3>*>(mesh_file.data() + ih->ofs_triangles);
     for(unsigned int i = 0; i < ih->num_triangles; i++) {
         auto t = triangles[i];
-        mesh.triangles.emplace_back(t);
+        mesh.indices.emplace_back(t);
     }
+    
+    mesh.bounds.min = {{min[0], min[1], min[2]}};
+    mesh.bounds.max = {{max[0], max[1], max[2]}};
 
     return mesh;
 }

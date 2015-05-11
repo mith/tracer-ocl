@@ -48,7 +48,7 @@ class Tracer {
     int width;
     int height;
 
-    std::unique_ptr<Scene> scene;
+    Scene scene;
 
 public:
     Tracer();

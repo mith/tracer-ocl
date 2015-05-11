@@ -29,6 +29,7 @@ float intersectSphere(struct Ray ray, struct Sphere sphere)
 
 float intersectTriangle(struct Ray ray, struct Triangle triangle)
 {
+    // Moller-Trumbore
     float3 e1 = triangle.b - triangle.a;
     float3 e2 = triangle.c - triangle.a;
     float3 P = cross(ray.direction, e2);

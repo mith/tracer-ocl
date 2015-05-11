@@ -64,7 +64,7 @@ Tracer::Tracer()
 #endif
     queue = cl::CommandQueue(context, device);
 
-    scene = std::make_unique<Scene>(context, device, queue);
+    scene = load_scene("../scenes/cornell.yaml", context, device, queue);
 
     auto max_group_size = device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
     group_size = std::sqrt(max_group_size);
@@ -110,11 +110,11 @@ void Tracer::load_kernels()
 
     program = cl::Program(context, sources);
     try {
-    if(program.build({device}, "-I ./kernels/") != CL_SUCCESS) {
-        std::cerr << "error building: "
-                  << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
-                  << std::endl;
-    }
+        if(program.build({device}, "-I ./kernels/") != CL_SUCCESS) {
+            std::cerr << "error building: "
+                      << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
+                      << std::endl;
+        }
     } catch (cl::Error err) {
         std::cerr << "error building: "
                   << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
@@ -122,24 +122,24 @@ void Tracer::load_kernels()
     }
     tracer_krnl = cl::Kernel(program, "tracer");
 
-    tracer_krnl.setArg(1, scene->lightsBuffer);
-    tracer_krnl.setArg(2, (cl_int)scene->lights.size());
+    tracer_krnl.setArg(1, scene.lightsBuffer);
+    tracer_krnl.setArg(2, (cl_int)scene.lights.size());
 
-    tracer_krnl.setArg(3, scene->planesBuffer);
-    tracer_krnl.setArg(4, (cl_int)scene->planes.size());
+    tracer_krnl.setArg(3, scene.planesBuffer);
+    tracer_krnl.setArg(4, (cl_int)scene.planes.size());
 
-    tracer_krnl.setArg(5, scene->spheresBuffer);
-    tracer_krnl.setArg(6, (cl_int)scene->spheres.size());
+    tracer_krnl.setArg(5, scene.spheresBuffer);
+    tracer_krnl.setArg(6, (cl_int)scene.spheres.size());
 
-    tracer_krnl.setArg(7, scene->vertexBuffer);
-    tracer_krnl.setArg(8, scene->triangleBuffer);
-    tracer_krnl.setArg(9, scene->meshesBuffer);
-    tracer_krnl.setArg(10, 1);
+    tracer_krnl.setArg(7, scene.vertexBuffer);
+    tracer_krnl.setArg(8, scene.indicesBuffer);
+    tracer_krnl.setArg(9, scene.meshesBuffer);
+    tracer_krnl.setArg(10, (cl_int)scene.clmeshes.size());
 
-    tracer_krnl.setArg(11, scene->aabbsBuffer);
-    tracer_krnl.setArg(12, (cl_int)scene->aabbs.size());
+    tracer_krnl.setArg(11, scene.bvhBuffer);
+    tracer_krnl.setArg(12, (cl_int)scene.bvh.size());
 
-    tracer_krnl.setArg(13, scene->materialsBuffer);
+    tracer_krnl.setArg(13, scene.materialsBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)
@@ -163,7 +163,7 @@ void Tracer::set_texture(GLuint texid, int width, int height)
 
 void Tracer::trace()
 {
-    scene->update();
+    scene.update();
 
     std::vector<cl::Memory> mem_objs = {tex};
     glFlush();

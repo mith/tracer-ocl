@@ -90,49 +90,68 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
 struct Triangle constructTriangle(global const struct Vertex* vertices,
                                   global const struct Indices* indices,
                                   int numTriangle,
-                                  float3 translate,
-                                  float3 scale)
+                                  struct Mesh mesh)
 {
-    uint3 i = indices[numTriangle].t;
+    uint3 i = indices[numTriangle + mesh.base_triangle].vertex;
     struct Triangle triangle;
-    triangle.a = vertices[i.x].v * scale + translate;
-    triangle.b = vertices[i.y].v * scale + translate;
-    triangle.c = vertices[i.z].v * scale + translate;
+    triangle.a = vertices[i.x + mesh.base_vertex].position * mesh.scale + mesh.position;
+    triangle.b = vertices[i.y + mesh.base_vertex].position * mesh.scale + mesh.position;
+    triangle.c = vertices[i.z + mesh.base_vertex].position * mesh.scale + mesh.position;
 
     return triangle;
 }
 
-struct RayHit traceRayAgainstMeshes(struct Ray ray,
-                                    global const struct Vertex* vertices,
-                                    global const struct Indices* indices,
-                                    global const struct Mesh* meshes,
-                                    int numMeshes)
+struct RayHit traceRayAgainstMesh(struct Ray ray,
+                                  global const struct Vertex* vertices,
+                                  global const struct Indices* indices,
+                                  global const struct Mesh* meshes,
+                                  int numMesh)
 {
     struct RayHit nearestHit;
     nearestHit.dist = (float)(INFINITY);
-    for (int m = 0; m < numMeshes; m++) {
-        struct Mesh mesh = meshes[m];
-        for (int p = 0; p < mesh.num_triangles; p++) {
-            struct Triangle triangle = constructTriangle(vertices, indices, p,
-                                                         mesh.translate, mesh.scale);
-            float t = intersectTriangle(ray, triangle);
 
-            if (nearestHit.dist > t && t > 0.0f) {
-                float3 loc = rayPoint(ray, t);
-                float3 v = triangle.b - triangle.a;
-                float3 w = triangle.c - triangle.a;
-                float3 normal = normalize(cross(v, w));
-                nearestHit.dist = t;
-                nearestHit.location = loc;
-                nearestHit.normal = -normal;
-                nearestHit.material = mesh.material;
-                nearestHit.object = &indices[p];
-            }
+    struct Mesh mesh = meshes[numMesh];
+    for (int p = 0; p < mesh.num_triangles; p++) {
+        struct Triangle triangle = constructTriangle(vertices, indices, p,
+                                                     mesh);
+        float t = intersectTriangle(ray, triangle);
+
+        if (nearestHit.dist > t && t > 0.0f) {
+            float3 loc = rayPoint(ray, t);
+            float3 v = triangle.b - triangle.a;
+            float3 w = triangle.c - triangle.a;
+            float3 normal = normalize(cross(v, w));
+            nearestHit.dist = t;
+            nearestHit.location = loc;
+            nearestHit.normal = -normal;
+            nearestHit.material = mesh.material;
+            nearestHit.object = &indices[p];
         }
     }
     return nearestHit;
 }
 
+struct RayHit traceRayAgainstBVH(struct Ray ray,
+                                 global const struct BVHNode* bvh,
+                                 int numBVHNodes,
+                                 global const struct Vertex* vertices,
+                                 global const struct Indices* indices,
+                                 global const struct Mesh* meshes,
+                                 int numMeshes)
+{
+    struct RayHit nearestHit;
+    nearestHit.dist = (float)(INFINITY);
+    for (int b = 0; b < numBVHNodes; b++) {
+        struct BVHNode bvhnode = bvh[b];
+        if (false) {//intersectAABB(ray, bvhnode.bounds)) {
+            struct RayHit hit = traceRayAgainstMesh(ray, vertices, indices, meshes, bvhnode.mesh);
+            if (hit.dist < nearestHit.dist) {
+                nearestHit = hit;
+            }
+        }
+    }
+    return nearestHit;
+}
 void kernel tracer(write_only image2d_t img,
                    global const struct Light* lights,
                    int numLights,
@@ -144,20 +163,16 @@ void kernel tracer(write_only image2d_t img,
                    global const struct Indices* indices,
                    global const struct Mesh* meshes,
                    int numMeshes,
-                   global const struct AABB* aabbs,
-                   int numAABBs,
+                   global const struct BVHNode* bvh,
+                   int numBVHNodes,
                    global const struct Material* materials)
 {
     const int2 coord = (int2)(get_global_id(0), get_global_id(1));
     struct Ray ray = createCameraRay(coord);
     struct RayHit planeHit = traceRayAgainstPlanes(ray, planes, numPlanes);
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
-    struct RayHit meshHit;
-    meshHit.dist = INFINITY;
-    if (intersectAABB(ray, aabbs[0])) {
-        meshHit = traceRayAgainstMeshes(ray, vertices, indices, meshes, numMeshes);
-    } 
-
+    struct RayHit meshHit = traceRayAgainstBVH(ray, bvh, numBVHNodes, vertices, 
+                                               indices, meshes, numMeshes);
 
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist && planeHit.dist < meshHit.dist) {
@@ -170,5 +185,9 @@ void kernel tracer(write_only image2d_t img,
         color = gatherLight(ray, meshHit, spheres, numSpheres,
                             lights, numLights, materials);
     }
+
+    //if (intersectAABB(ray, aabbs[0])) {
+    //    color = (float3)(0.0f, 0.0f, 0.0f);
+    //} 
     write_imagef(img, coord, (float4)(color, 1.0f));
 }

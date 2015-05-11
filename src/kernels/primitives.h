@@ -45,16 +45,19 @@ struct Mesh {
     int num_triangles;
     int material;
 
-    float3 translate;
+    float3 position;
     float3 scale;
+
+    int base_vertex;
+    int base_triangle;
 };
 
 struct Vertex {
-    float3 v;
+    float3 position;
 };
 
 struct Indices {
-    uint3 t;
+    uint3 vertex;
 };
 
 struct Triangle {
@@ -66,6 +69,13 @@ struct Triangle {
 struct AABB {
     float3 min;
     float3 max;
+};
+
+struct BVHNode {
+    struct AABB bounds;
+    int mesh;
+    float3 position;
+    float3 scale;
 };
 
 #endif
