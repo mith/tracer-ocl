@@ -80,14 +80,15 @@ bool occluded(struct Ray ray,
     }
 
     for (int b = 0; b < geometry.numBVHNodes; b++) {
-        //struct BVHNode bvhnode = geometry.bvh[b];
-        //bvhnode.bounds.min = bvhnode.bounds.min
-        //                   * bvhnode.scale
-        //                   + bvhnode.position;
-        //bvhnode.bounds.max = bvhnode.bounds.max
-        //                   * bvhnode.scale
-        //                   + bvhnode.position;
-        //if (intersectAABB(ray, bvhnode.bounds)) {
+        struct BVHNode bvhnode = geometry.bvh[b];
+        bvhnode.bounds.min = bvhnode.bounds.min
+                           //* bvhnode.scale
+                           + bvhnode.position;
+        bvhnode.bounds.max = bvhnode.bounds.max
+                           //* bvhnode.scale
+                           + bvhnode.position;
+        if (intersectAABB(ray, bvhnode.bounds)) {
+     
             struct Mesh mesh = geometry.meshes[b];
             for (int p = 0; p < mesh.num_triangles; p++) {
                 if (&geometry.indices[p] == ignoredObject)
@@ -101,7 +102,7 @@ bool occluded(struct Ray ray,
                     return true;
                 }
             }
-        //}
+        }
     }
 
     return false;
