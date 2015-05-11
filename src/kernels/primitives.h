@@ -42,11 +42,11 @@ struct Sphere {
 };
 
 struct Mesh {
-    int num_triangles;
-    int material;
-
     float3 position;
     float3 scale;
+
+    int num_triangles;
+    int material;
 
     int base_vertex;
     int base_triangle;
@@ -73,9 +73,27 @@ struct AABB {
 
 struct BVHNode {
     struct AABB bounds;
-    int mesh;
     float3 position;
     float3 scale;
+    int mesh;
 };
+
+struct Geometry {
+    global const struct Sphere* spheres;
+    int numSpheres;
+    global const struct Plane* planes;
+    int numPlanes;
+    global const struct Vertex* vertices;
+    global const struct Indices* indices;
+    global const struct Mesh* meshes;
+    int numMeshes;
+    global const struct BVHNode* bvh;
+    int numBVHNodes;
+};
+
+struct Triangle constructTriangle(global const struct Vertex* vertices,
+                                  global const struct Indices* indices,
+                                  int numTriangle,
+                                  struct Mesh);
 
 #endif

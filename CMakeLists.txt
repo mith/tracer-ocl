@@ -12,6 +12,7 @@ add_executable(tracer-ocl src/main.cpp src/Tracer.cpp src/Scene.cpp src/Meshload
 set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD 14)
 set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD_REQUIRED 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic") 
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto") 
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/usr/local/lib")
 include_directories("./include" 
                     "/Users/simon/tmp/regal/include"

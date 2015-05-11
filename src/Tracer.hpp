@@ -36,7 +36,8 @@ class Tracer {
 
     int group_size;
 
-    const std::array<std::string, 4> kernel_filenames = { { "kernels/tracer.cl",
+    const std::array<std::string, 5> kernel_filenames = { { "kernels/tracer.cl",
+                                                            "kernels/primitives.cl",
                                                             "kernels/intersect.cl",
                                                             "kernels/brdf.cl",
                                                             "kernels/shader.cl" } };

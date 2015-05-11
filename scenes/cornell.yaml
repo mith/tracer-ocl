@@ -19,13 +19,13 @@ planes:
       material: 5
 
 spheres:
-    - center: [-30.0, 30.0, -90.0]
-      radius: 19.0
+    - center: [30.0, 30.0, -90.0]
+      radius: 12.0
       material: 5
     - center: [-47.0, 10.0, -70.0]
       radius: 5.0
       material: 0
-    - center: [-30.0, 40.0, -100.0]
+    - center: [-30.0, 20.0, -60.0]
       radius: 5.0
       material: 4
 
@@ -45,7 +45,7 @@ meshes:
 
 lights:
     - color: [3.0, 3.0, 3.0]
-      location: [0.0, 0.0, -70.0]
+      location: [0.0, 40.0, -70.0]
       radius: 120
 
 materials:

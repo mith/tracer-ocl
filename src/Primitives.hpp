@@ -66,11 +66,11 @@ struct Mesh {
 };
 
 struct CLMesh {
-    cl_int num_triangles;
-    cl_int material;
-
     cl_float3 position;
     cl_float3 scale;
+
+    cl_int num_triangles;
+    cl_int material;
 
     cl_int base_vertex;
     cl_int base_triangle;
@@ -78,7 +78,7 @@ struct CLMesh {
 
 struct BVHNode {
     AABB bounds;
-    cl_int mesh;
     cl_float3 position;
     cl_float3 scale;
+    cl_int mesh;
 };

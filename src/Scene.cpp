@@ -13,48 +13,24 @@ Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
     , device(device)
     , queue(queue)
 {
-    //Mesh tetra = load_mesh("../meshes/tetrahedron.iqm");
-
-    //vertexBuffer = cl::Buffer(context, CL_MEM_READ_ONLY,
-    //                          sizeof(Vertex) * tetra.positions.size());
-    //queue.enqueueWriteBuffer(vertexBuffer, CL_TRUE, 0,
-    //                         sizeof(Vertex) * tetra.positions.size(),
-    //                         tetra.positions.data());
-
-    //triangleBuffer = cl::Buffer(context, CL_MEM_READ_ONLY,
-    //                            sizeof(Triangle) * tetra.triangles.size());
-    //queue.enqueueWriteBuffer(triangleBuffer, CL_TRUE, 0,
-    //                         sizeof(Triangle) * tetra.triangles.size(),
-    //                         tetra.triangles.data());
-
-    //CLMesh cm({(cl_int)tetra.triangles.size(), 
-    //           1,
-    //           {{-30.0f, 10.0f, -80.0f}},
-    //           {{2.0f, 2.0f, 2.0f}}});
-    //meshesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY,
-    //                          sizeof(CLMesh)); 
-    //queue.enqueueWriteBuffer(meshesBuffer, CL_TRUE, 0,
-    //                         sizeof(CLMesh), &cm);
-
-    //aabbsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(aabbs));
-    //queue.enqueueWriteBuffer(aabbsBuffer, CL_TRUE, 0,
-    //                         sizeof(aabbs), &aabbs);
 }
 
 void Scene::update()
 {
-    float x = fmod((glfwGetTime()), 2 * M_PI);
-    spheres[0].center.s[0] = 0.f - std::sin(x - M_PI) * 30;
-    spheres[0].center.s[1] = 0.0f - std::sin(x - M_PI / 2) * 30;
-    spheres[1].center.s[0] = 0.f - std::sin(x - M_PI) * 40;
-    cl::copy(spheres.begin(), spheres.end(), spheresBuffer);
+    float x = fmod((glfwGetTime() * 0.7), 2 * M_PI);
+    //spheres[0].center.s[0] = 0.f - std::sin(x - M_PI) * 30;
+    //spheres[0].center.s[1] = 0.0f - std::sin(x - M_PI / 2) * 30;
+    //spheres[1].center.s[0] = 0.f - std::sin(x - M_PI) * 40;
+    ////cl::copy(spheres.begin(), spheres.end(), spheresBuffer);
     //queue.enqueueWriteBuffer(spheresBuffer, CL_TRUE, 0,
-    //                         sizeof(Sphere) * spheres.size(), &spheres);
+    //                         sizeof(Sphere) * spheres.size(), spheres.data());
 
-    lights[0].location.s[2] = -80.f - std::cos(x - M_PI) * 30;
-    cl::copy(lights.begin(), lights.end(), lightsBuffer);
-    //queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
-    //                         sizeof(Light) * lights.size(), &lights);
+    lights[0].location.x = std::cos(x - M_PI / 2) * 40;
+    //lights[0].location.y = std::sin(x - M_PI) * 22;
+    lights[0].location.z = -80.f - std::cos(x - M_PI) * 30;
+    //cl::copy(lights.begin(), lights.end(), lightsBuffer);
+    queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
+                             sizeof(Light) * lights.size(), lights.data());
 }
 
 Scene load_scene(const std::string & filename, cl::Context context, cl::Device device, cl::CommandQueue queue)

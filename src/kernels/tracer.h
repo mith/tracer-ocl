@@ -12,10 +12,6 @@ float3 reflect(float3 v, float3 n);
 struct RayHit traceRayAgainstSpheres(struct Ray ray,
                                      global const struct Sphere* spheres,
                                      int numSpheres);
-struct Triangle constructTriangle(global const struct Vertex* vertices,
-                                  global const struct Indices* indices,
-                                  int numTriangle,
-                                  struct Mesh);
 struct RayHit traceRayAgainstMesh(struct Ray ray,
                                   global const struct Vertex* vertices,
                                   global const struct Indices* indices,

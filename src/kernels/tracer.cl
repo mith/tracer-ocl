@@ -87,20 +87,6 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
     return nearestHit;
 }
 
-struct Triangle constructTriangle(global const struct Vertex* vertices,
-                                  global const struct Indices* indices,
-                                  int numTriangle,
-                                  struct Mesh mesh)
-{
-    uint3 i = indices[numTriangle + mesh.base_triangle].vertex;
-    struct Triangle triangle;
-    triangle.a = vertices[i.x + mesh.base_vertex].position * mesh.scale + mesh.position;
-    triangle.b = vertices[i.y + mesh.base_vertex].position * mesh.scale + mesh.position;
-    triangle.c = vertices[i.z + mesh.base_vertex].position * mesh.scale + mesh.position;
-
-    return triangle;
-}
-
 struct RayHit traceRayAgainstMesh(struct Ray ray,
                                   global const struct Vertex* vertices,
                                   global const struct Indices* indices,
@@ -144,10 +130,10 @@ struct RayHit traceRayAgainstBVH(struct Ray ray,
     for (int b = 0; b < numBVHNodes; b++) {
         struct BVHNode bvhnode = bvh[b];
         bvhnode.bounds.min = bvhnode.bounds.min
-                           //* bvhnode.scale
+                           * bvhnode.scale
                            + bvhnode.position;
         bvhnode.bounds.max = bvhnode.bounds.max
-                           //* bvhnode.scale
+                           * bvhnode.scale
                            + bvhnode.position;
         if (intersectAABB(ray, bvhnode.bounds)) {
             struct RayHit hit = traceRayAgainstMesh(ray, vertices, indices, meshes, bvhnode.mesh);
@@ -180,15 +166,28 @@ void kernel tracer(write_only image2d_t img,
     struct RayHit meshHit = traceRayAgainstBVH(ray, bvh, numBVHNodes, vertices, 
                                                indices, meshes, numMeshes);
 
+    struct Geometry geometry = {
+        spheres,
+        numSpheres,
+        planes,
+        numPlanes,
+        vertices,
+        indices,
+        meshes,
+        numMeshes,
+        bvh,
+        numBVHNodes
+    };
+
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist && planeHit.dist < meshHit.dist) {
-        color = gatherLight(ray, planeHit, spheres, numSpheres,
+        color = gatherLight(ray, planeHit, geometry,
                             lights, numLights, materials);
     } else if (sphereHit.dist < meshHit.dist) {
-        color = gatherLight(ray, sphereHit, spheres, numSpheres,
+        color = gatherLight(ray, sphereHit, geometry,
                             lights, numLights, materials);
     } else {
-        color = gatherLight(ray, meshHit, spheres, numSpheres,
+        color = gatherLight(ray, meshHit, geometry,
                             lights, numLights, materials);
     }
 

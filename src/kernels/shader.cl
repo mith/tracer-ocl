@@ -28,8 +28,7 @@ float3 shade(float3 normal, float3 view,
 
 float3 gatherLight(struct Ray ray,
                    struct RayHit hit,
-                   global const struct Sphere* spheres,
-                   int numSpheres,
+                   struct Geometry geometry,
                    global const struct Light* lights,
                    int numLights,
                    global const struct Material* materials)
@@ -50,8 +49,7 @@ float3 gatherLight(struct Ray ray,
         if (!occluded(rayToLight,
                             distance(hit.location,light.location),
                             hit.object,
-                            spheres,
-                            numSpheres)) {
+                            geometry)) {
             float3 halfVec = normalize(lightDir + view);
             float lightDist = distance(hit.location, light.location);
             float att = clamp(1.0f - lightDist * lightDist
@@ -68,23 +66,43 @@ float3 gatherLight(struct Ray ray,
 bool occluded(struct Ray ray,
               float targetDistance,
               global const void* ignoredObject,
-              global const struct Sphere* spheres,
-              int numSpheres)
+              struct Geometry geometry)
 {
-    float nearestDist = targetDistance;
-    int object = -1;
-    
-    for (int s = 0; s < numSpheres; s++) {
-        if (&spheres[s] == ignoredObject)
+    for (int s = 0; s < geometry.numSpheres; s++) {
+        if (&geometry.spheres[s] == ignoredObject)
             continue;
 
-        struct Sphere sphere = spheres[s];
+        struct Sphere sphere = geometry.spheres[s];
         float t = intersectSphere(ray, sphere);
-        if (t < nearestDist && t > 0.0f) {
-            nearestDist = t;
-            object = s;
+        if (t < targetDistance && t > 0.0f) {
+            return true;
         }
     }
 
-    return object > -1;
+    for (int b = 0; b < geometry.numBVHNodes; b++) {
+        //struct BVHNode bvhnode = geometry.bvh[b];
+        //bvhnode.bounds.min = bvhnode.bounds.min
+        //                   * bvhnode.scale
+        //                   + bvhnode.position;
+        //bvhnode.bounds.max = bvhnode.bounds.max
+        //                   * bvhnode.scale
+        //                   + bvhnode.position;
+        //if (intersectAABB(ray, bvhnode.bounds)) {
+            struct Mesh mesh = geometry.meshes[b];
+            for (int p = 0; p < mesh.num_triangles; p++) {
+                if (&geometry.indices[p] == ignoredObject)
+                    continue;
+
+                struct Triangle triangle = constructTriangle(geometry.vertices,
+                                                             geometry.indices,
+                                                             p, mesh);
+                float t = intersectTriangle(ray, triangle);
+                if (t < targetDistance && t > 0.0f) {
+                    return true;
+                }
+            }
+        //}
+    }
+
+    return false;
 }
