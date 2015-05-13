@@ -15,7 +15,9 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <tuple>
+#include <algorithm>
 
+#include "yaml-cpp/yaml.h"
 #include "cl.hpp"
 #include "Tracer.hpp"
 #include "Scene.hpp"
@@ -38,7 +40,7 @@ void window_resize_callback(GLFWwindow* /*window*/, int width, int height)
     glViewport(0, 0, (GLsizei)width, (GLsizei)height);
 }
 
-std::tuple<cl::Context, cl::Device, cl::CommandQueue> init_cl(int device_num) 
+std::tuple<cl::Context, cl::Device, cl::CommandQueue> init_cl(const std::string& device_name) 
 {
     std::vector<cl::Platform> all_platforms;
     cl::Platform::get(&all_platforms);
@@ -56,12 +58,15 @@ std::tuple<cl::Context, cl::Device, cl::CommandQueue> init_cl(int device_num)
     std::vector<cl::Device> all_devices;
     default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
 
-    for (auto & device : all_devices) {
-        std::cout << device.getInfo<CL_DEVICE_NAME>()
+    cl::Device device;
+    for (auto & dev : all_devices) {
+        const std::string name = dev.getInfo<CL_DEVICE_NAME>();
+        std::cout << name
                   << std::endl;
+        if (name.find(device_name) != std::string::npos) {
+            device = dev;
+        }
     }
-
-    cl::Device device = all_devices[device_num];
 
     std::cout << "Using device: "
               << device.getInfo<CL_DEVICE_NAME>()
@@ -122,20 +127,26 @@ GLFWwindow* init_gl(int width, int height)
 
 int main()
 {
-    int width = 1024;
-    int height = 512;
+    YAML::Node config = YAML::LoadFile("../config.yaml");
+
+    int width = config["width"].as<int>();
+    int height = config["height"].as<int>();
 
     auto window = init_gl(width, height);
+
+    std::string device_name = config["compute_device"].as<std::string>();
 
     cl::Context context;
     cl::Device device;
     cl::CommandQueue queue;
-    std::tie(context, device, queue) = init_cl(2);
+    std::tie(context, device, queue) = init_cl(device_name);
     Tracer tracer(context, device, queue);
 
     Drawer drawer(width, height);
 
-    auto scene = Scene::load("../scenes/cornell.yaml", context, device, queue);
+    auto scene_file = config["scene"].as<std::string>();
+
+    auto scene = Scene::load("../scenes/" + scene_file, context, device, queue);
     tracer.load_kernels();
     tracer.set_scene(scene);
     tracer.set_texture(drawer.texture(), width, height);
