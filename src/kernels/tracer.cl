@@ -166,7 +166,7 @@ void kernel tracer(write_only image2d_t img,
     struct RayHit meshHit = traceRayAgainstBVH(ray, bvh, numBVHNodes, vertices, 
                                                indices, meshes, numMeshes);
 
-    struct Geometry geometry = {
+    const struct Geometry geometry = {
         spheres,
         numSpheres,
         planes,
@@ -181,18 +181,15 @@ void kernel tracer(write_only image2d_t img,
 
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (planeHit.dist < sphereHit.dist && planeHit.dist < meshHit.dist) {
-        color = gatherLight(ray, planeHit, geometry,
+        color = gatherLight(ray, planeHit, &geometry,
                             lights, numLights, materials);
     } else if (sphereHit.dist < meshHit.dist) {
-        color = gatherLight(ray, sphereHit, geometry,
+        color = gatherLight(ray, sphereHit, &geometry,
                             lights, numLights, materials);
     } else {
-        color = gatherLight(ray, meshHit, geometry,
+        color = gatherLight(ray, meshHit, &geometry,
                             lights, numLights, materials);
     }
 
-    //if (intersectAABB(ray, aabbs[0])) {
-    //    color = (float3)(0.0f, 0.0f, 0.0f);
-    //} 
     write_imagef(img, coord, (float4)(color, 1.0f));
 }

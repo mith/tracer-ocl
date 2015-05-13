@@ -15,11 +15,7 @@
 #endif
 
 #include <iostream>
-#include <memory>
 #include <vector>
-#include <array>
-#include <fstream>
-#include <sstream>
 
 #include "cl.hpp"
 
@@ -29,6 +25,7 @@ struct Ray {
     cl_float3 origin;
     cl_float3 direction;
 };
+
 class Tracer {
     cl::Context context;
     cl::Device device;
@@ -36,11 +33,12 @@ class Tracer {
 
     int group_size;
 
-    const std::array<std::string, 5> kernel_filenames = { { "kernels/tracer.cl",
-                                                            "kernels/primitives.cl",
-                                                            "kernels/intersect.cl",
-                                                            "kernels/brdf.cl",
-                                                            "kernels/shader.cl" } };
+    const std::string kernels_dir = "../src/kernels/";
+    const std::array<std::string, 5> kernel_filenames = { { "tracer.cl",
+                                                            "primitives.cl",
+                                                            "intersect.cl",
+                                                            "brdf.cl",
+                                                            "shader.cl" } };
 
     cl::Program program;
     cl::Kernel tracer_krnl;
@@ -49,12 +47,11 @@ class Tracer {
     int width;
     int height;
 
-    Scene scene;
-
 public:
-    Tracer();
+    Tracer(cl::Context, cl::Device, cl::CommandQueue);
     void load_kernels();
     void set_texture(GLuint texid, int width, int height);
+    void set_scene(const Scene& scene);
     void trace();
 };
 

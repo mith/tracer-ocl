@@ -36,8 +36,8 @@ Mesh load_mesh(std::string filename)
     mesh.vertices.reserve(ih->num_vertexes);
     mesh.indices.reserve(ih->num_triangles);
 
-    std::array<float, 3> min {0.0f, 0.0f, 0.0f};
-    std::array<float, 3> max {0.0f, 0.0f, 0.0f};
+    std::array<float, 3> min {{0.0f, 0.0f, 0.0f}};
+    std::array<float, 3> max {{0.0f, 0.0f, 0.0f}};
 
     auto vertices = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + iva->offset);
     for(unsigned int i = 0; i < ih->num_vertexes; i++) {

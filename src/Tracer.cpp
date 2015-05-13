@@ -8,84 +8,25 @@
 
 #include <cmath>
 
-Tracer::Tracer()
+Tracer::Tracer(cl::Context context, cl::Device device, cl::CommandQueue queue)
+    : context(context)
+    , device(device)
+    , queue(queue)
 {
-    std::vector<cl::Platform> all_platforms;
-    cl::Platform::get(&all_platforms);
-
-    for (auto & platform : all_platforms) {
-        std::cout << platform.getInfo<CL_PLATFORM_NAME>()
-                  << std::endl;
-    }
-
-    cl::Platform default_platform = all_platforms[0];
-    std::cout << "Using platform: "
-              << default_platform.getInfo<CL_PLATFORM_NAME>()
-              << std::endl;
-
-    std::vector<cl::Device> all_devices;
-    default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-
-    for (auto & device : all_devices) {
-        std::cout << device.getInfo<CL_DEVICE_NAME>()
-                  << std::endl;
-    }
-
-#ifdef __APPLE__
-    device = all_devices[2];
-#elif defined __linux__
-    device = all_devices[0];
-#endif
-
-    std::cout << "Using device: "
-              << device.getInfo<CL_DEVICE_NAME>()
-              << std::endl;
-
-    std::cout << "Extensions: "
-              << device.getInfo<CL_DEVICE_EXTENSIONS>()
-              << std::endl;
-
-    cl_context_properties properties[] {
-#ifdef __APPLE__
-        CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
-        (cl_context_properties) CGLGetShareGroup(CGLGetCurrentContext()),
-#elif defined __linux__
-        CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
-        CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
-        CL_CONTEXT_PLATFORM, (cl_context_properties)(all_platforms[0])(),
-#endif
-        0
-    };
-
-#ifdef __APPLE__
-    context = cl::Context(device, properties, clLogMessagesToStdoutAPPLE);
-#elif defined __linux__
-    context = cl::Context(device, properties, &contextCallback);
-#endif
-    queue = cl::CommandQueue(context, device);
-
-    scene = load_scene("../scenes/cornell.yaml", context, device, queue);
-
     auto max_group_size = device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
     group_size = std::sqrt(max_group_size);
-
-    std::cout << "Group size: " << group_size << std::endl;
-
-    std::cout << "Local memory size: " 
-              << device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>()
-              << std::endl;
 }
 
 void CL_CALLBACK contextCallback(
         const char* errInfo,
-        const void* private_info,
-        size_t cb,
-        void* user_data)
+        const void* /*private_info*/,
+        size_t /*cb*/,
+        void* /*user_data*/)
 {
     std::cerr << errInfo << std::endl;
 }
 
-std::string file_str (std::string filename)
+std::string file_to_str (std::string filename)
 {
     using namespace boost::iostreams;
     mapped_file_source txt_file(filename);
@@ -101,7 +42,7 @@ void Tracer::load_kernels()
     std::vector<std::string> src_strs;
 
     for (auto & flnm : kernel_filenames) {
-        src_strs.push_back(file_str(flnm));
+        src_strs.push_back(file_to_str(kernels_dir + flnm));
     }
 
     for (auto & src : src_strs) {
@@ -110,11 +51,7 @@ void Tracer::load_kernels()
 
     program = cl::Program(context, sources);
     try {
-        if(program.build({device}, "-I ./kernels/") != CL_SUCCESS) {
-            std::cerr << "error building: "
-                      << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
-                      << std::endl;
-        }
+        program.build({device}, ("-I " + kernels_dir).c_str());
     } catch (cl::Error err) {
         std::cerr << "error building: "
                   << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
@@ -122,6 +59,10 @@ void Tracer::load_kernels()
     }
     tracer_krnl = cl::Kernel(program, "tracer");
 
+}
+
+void Tracer::set_scene(const Scene& scene)
+{
     tracer_krnl.setArg(1, scene.lightsBuffer);
     tracer_krnl.setArg(2, (cl_int)scene.lights.size());
 
@@ -163,8 +104,6 @@ void Tracer::set_texture(GLuint texid, int width, int height)
 
 void Tracer::trace()
 {
-    scene.update();
-
     std::vector<cl::Memory> mem_objs = {tex};
     glFlush();
     queue.enqueueAcquireGLObjects(&mem_objs, nullptr);

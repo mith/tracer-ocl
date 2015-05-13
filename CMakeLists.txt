@@ -8,15 +8,14 @@ find_package(Boost REQUIRED COMPONENTS iostreams)
 pkg_search_module(GLFW REQUIRED glfw3)
 pkg_search_module(YAML REQUIRED yaml-cpp)
 
-add_executable(tracer-ocl src/main.cpp src/Tracer.cpp src/Scene.cpp src/Meshloader.cpp)
+file(GLOB SOURCES src/*.cpp)
+
+add_executable(tracer-ocl ${SOURCES})
 set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD 14)
 set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD_REQUIRED 14)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -fcolor-diagnostics") 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto") 
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/usr/local/lib")
 include_directories("./include" 
-                    "/Users/simon/tmp/regal/include"
-                    "/usr/local/include/"
                     ${OpenCL_INCLUDE_DIR} 
                     ${OPENGL_INCLUDE_DIR} 
                     ${GLFW_INCLUDE_DIR}
@@ -27,7 +26,3 @@ target_link_libraries(tracer-ocl ${OpenCL_LIBRARIES}
                                  ${OPENGL_LIBRARIES} 
                                  ${Boost_LIBRARIES}
                                  ${YAML_LIBRARIES})
-add_custom_command(TARGET tracer-ocl POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory
-                        ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels
-                        $<TARGET_FILE_DIR:tracer-ocl>/kernels)

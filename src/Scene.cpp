@@ -6,8 +6,6 @@
 
 #include <cmath>
 
-Scene::Scene(){}
-
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
     : context(context)
     , device(device)
@@ -33,7 +31,7 @@ void Scene::update()
                              sizeof(Light) * lights.size(), lights.data());
 }
 
-Scene load_scene(const std::string & filename, cl::Context context, cl::Device device, cl::CommandQueue queue)
+Scene Scene::load(const std::string & filename, cl::Context context, cl::Device device, cl::CommandQueue queue)
 {
     YAML::Node scene_file = YAML::LoadFile(filename);
 

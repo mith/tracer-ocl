@@ -28,7 +28,7 @@ float3 shade(float3 normal, float3 view,
 
 float3 gatherLight(struct Ray ray,
                    struct RayHit hit,
-                   struct Geometry geometry,
+                   const struct Geometry* geometry,
                    global const struct Light* lights,
                    int numLights,
                    global const struct Material* materials)
@@ -66,21 +66,21 @@ float3 gatherLight(struct Ray ray,
 bool occluded(struct Ray ray,
               float targetDistance,
               global const void* ignoredObject,
-              struct Geometry geometry)
+              const struct Geometry* geometry)
 {
-    for (int s = 0; s < geometry.numSpheres; s++) {
-        if (&geometry.spheres[s] == ignoredObject)
+    for (int s = 0; s < geometry->numSpheres; s++) {
+        if (&geometry->spheres[s] == ignoredObject)
             continue;
 
-        struct Sphere sphere = geometry.spheres[s];
+        struct Sphere sphere = geometry->spheres[s];
         float t = intersectSphere(ray, sphere);
         if (t < targetDistance && t > 0.0f) {
             return true;
         }
     }
 
-    for (int b = 0; b < geometry.numBVHNodes; b++) {
-        struct BVHNode bvhnode = geometry.bvh[b];
+    for (int b = 0; b < geometry->numBVHNodes; b++) {
+        struct BVHNode bvhnode = geometry->bvh[b];
         bvhnode.bounds.min = bvhnode.bounds.min
                            * bvhnode.scale
                            + bvhnode.position;
@@ -89,13 +89,13 @@ bool occluded(struct Ray ray,
                            + bvhnode.position;
         if (intersectAABB(ray, bvhnode.bounds)) {
      
-            struct Mesh mesh = geometry.meshes[b];
+            struct Mesh mesh = geometry->meshes[b];
             for (int p = 0; p < mesh.num_triangles; p++) {
-                if (&geometry.indices[p] == ignoredObject)
+                if (&geometry->indices[p] == ignoredObject)
                     continue;
 
-                struct Triangle triangle = constructTriangle(geometry.vertices,
-                                                             geometry.indices,
+                struct Triangle triangle = constructTriangle(geometry->vertices,
+                                                             geometry->indices,
                                                              p, mesh);
                 float t = intersectTriangle(ray, triangle);
                 if (t < targetDistance && t > 0.0f) {
