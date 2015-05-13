@@ -6,16 +6,18 @@
 
 struct Ray createCameraRay(int2 coord)
 {
-    const float viewport_width = 2.0f;
-    const float viewport_height = 1.0f;
+    float width = (float)get_global_size(0);
+    float height = (float)get_global_size(1);
 
-    const float x_ratio = viewport_width / (float)get_global_size(0);
-    const float y_ratio = viewport_height / (float)get_global_size(1);
+    float ratio = height / width;
+
+    const float x_ratio = 1.0f / (float)get_global_size(0);
+    const float y_ratio = ratio / (float)get_global_size(1);
 
     struct Ray ray;
-    ray.direction = normalize((float3)(coord.x * x_ratio - 1.0f,
-                                       coord.y * y_ratio - 0.5f,
-                                       -0.7f));
+    ray.direction = normalize((float3)(coord.x * x_ratio - 0.5f,
+                                       coord.y * y_ratio - ratio / 2,
+                                       -0.3f));
     ray.origin = (float3)(0.0f, 0.0f, 0.0f);
     ray.direction_inverse = 1.0f / ray.direction;
     return ray;
