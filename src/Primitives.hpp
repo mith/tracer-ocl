@@ -41,10 +41,13 @@ struct Material {
 
 struct Vertex {
     cl_float3 position;
+    cl_float3 normal;
 
     Vertex() {} 
-    Vertex (std::array<float, 3> p)
-        : position{{p[0], p[1], p[2]}} {}
+    Vertex (std::array<float, 3> & p, std::array<float, 3> & n)
+        : position{{p[0], p[1], p[2]}}
+        , normal{{n[0], n[1], n[2]}}
+    {}
 };
 
 struct Indice {

@@ -30,14 +30,14 @@ float intersectSphere(struct Ray ray, struct Sphere sphere)
 float intersectTriangle(struct Ray ray, struct Triangle triangle)
 {
     // Moller-Trumbore
-    float3 e1 = triangle.b - triangle.a;
-    float3 e2 = triangle.c - triangle.a;
+    float3 e1 = triangle.b.position - triangle.a.position;
+    float3 e2 = triangle.c.position - triangle.a.position;
     float3 P = cross(ray.direction, e2);
     float det = dot(e1, P);
     if (det > -FLT_EPSILON && det < FLT_EPSILON) return INFINITY;
 
     float inv_det = 1.0f / det;
-    float3 T = ray.origin - triangle.a;
+    float3 T = ray.origin - triangle.a.position;
     float u = dot(T, P) * inv_det;
     if (u < 0.0f || u > 1.0f) return INFINITY;
 

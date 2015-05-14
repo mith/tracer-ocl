@@ -30,7 +30,11 @@ Mesh load_mesh(std::string filename)
 
     const iqmheader* ih = reinterpret_cast<const iqmheader*>(mesh_file.data());
 
-    const iqmvertexarray* iva = reinterpret_cast<const iqmvertexarray*>(mesh_file.data() + ih->ofs_vertexarrays);
+    const iqmvertexarray* vaptr = reinterpret_cast<const iqmvertexarray*>(mesh_file.data() + ih->ofs_vertexarrays);
+
+    const iqmvertexarray* posva = vaptr;
+    const iqmvertexarray* uvva = vaptr + 1;
+    const iqmvertexarray* normalva = vaptr + 2;
 
     Mesh mesh;
     mesh.vertices.reserve(ih->num_vertexes);
@@ -39,16 +43,19 @@ Mesh load_mesh(std::string filename)
     std::array<float, 3> min {{0.0f, 0.0f, 0.0f}};
     std::array<float, 3> max {{0.0f, 0.0f, 0.0f}};
 
-    auto vertices = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + iva->offset);
+    auto positions = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + posva->offset);
+    auto normals = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + normalva->offset);
     for(unsigned int i = 0; i < ih->num_vertexes; i++) {
-        auto v = vertices[i];
+        auto pos = positions[i];
+        auto nor = normals[i];
+
 
         for (int j = 0; j < 3; j++) {
-            min[j] = std::min(v[j], min[j]);
-            max[j] = std::max(v[j], max[j]);
+            min[j] = std::min(pos[j], min[j]);
+            max[j] = std::max(pos[j], max[j]);
         }
 
-        mesh.vertices.emplace_back(v);
+        mesh.vertices.emplace_back(pos, nor);
     }
 
     auto triangles = reinterpret_cast<const std::array<unsigned int, 3>*>(mesh_file.data() + ih->ofs_triangles);

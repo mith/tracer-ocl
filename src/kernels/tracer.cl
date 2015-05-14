@@ -104,8 +104,8 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
 
         if (nearestHit.dist > t && t > 0.0f) {
             float3 loc = rayPoint(ray, t);
-            float3 v = triangle.b - triangle.a;
-            float3 w = triangle.c - triangle.a;
+            float3 v = triangle.b.position - triangle.a.position;
+            float3 w = triangle.c.position - triangle.a.position;
             float3 normal = normalize(cross(v, w));
             nearestHit.dist = t;
             nearestHit.location = loc;

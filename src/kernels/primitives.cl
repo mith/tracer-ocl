@@ -7,11 +7,13 @@ struct Triangle constructTriangle(global const struct Vertex* vertices,
 {
     uint3 i = indices[numTriangle + mesh.base_triangle].vertex;
     struct Triangle triangle;
-    triangle.a = vertices[i.x + mesh.base_vertex].position * mesh.scale + mesh.position;
-    triangle.b = vertices[i.y + mesh.base_vertex].position * mesh.scale + mesh.position;
-    triangle.c = vertices[i.z + mesh.base_vertex].position * mesh.scale + mesh.position;
-
-    return triangle;
+    triangle.a = vertices[i.x + mesh.base_vertex];
+    triangle.b = vertices[i.y + mesh.base_vertex];
+    triangle.c = vertices[i.z + mesh.base_vertex];
+    triangle.a.position = triangle.a.position *  mesh.scale + mesh.position;
+    triangle.b.position = triangle.b.position *  mesh.scale + mesh.position;
+    triangle.c.position = triangle.c.position *  mesh.scale + mesh.position;    
+   return triangle;
 }
 
 

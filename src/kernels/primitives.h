@@ -54,6 +54,7 @@ struct Mesh {
 
 struct Vertex {
     float3 position;
+    float3 normal;
 };
 
 struct Indices {
@@ -61,9 +62,9 @@ struct Indices {
 };
 
 struct Triangle {
-    float3 a;
-    float3 b;
-    float3 c;
+    struct Vertex a;
+    struct Vertex b;
+    struct Vertex c;
 };
 
 struct AABB {
