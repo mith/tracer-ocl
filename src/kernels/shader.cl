@@ -46,6 +46,7 @@ float3 gatherLight(struct Ray ray,
         struct Ray rayToLight;
         rayToLight.origin = hit.location;
         rayToLight.direction = lightDir;
+        rayToLight.direction_inverse = 1 / lightDir;
         if (!occluded(rayToLight,
                             distance(hit.location,light.location),
                             hit.object,
