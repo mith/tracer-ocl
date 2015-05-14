@@ -15,3 +15,11 @@ struct Triangle constructTriangle(global const struct Vertex* vertices,
 }
 
 
+struct Ray createRay(float3 origin, float3 direction)
+{
+    struct Ray ray;
+    ray.direction = direction;
+    ray.origin = origin;
+    ray.direction_inverse = 1.0f / direction;
+    return ray;
+}

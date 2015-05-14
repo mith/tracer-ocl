@@ -14,13 +14,11 @@ struct Ray createCameraRay(int2 coord)
     const float x_ratio = 1.0f / (float)get_global_size(0);
     const float y_ratio = ratio / (float)get_global_size(1);
 
-    struct Ray ray;
-    ray.direction = normalize((float3)(coord.x * x_ratio - 0.5f,
+    float3 direction = normalize((float3)(coord.x * x_ratio - 0.5f,
                                        coord.y * y_ratio - ratio / 2,
                                        -0.3f));
-    ray.origin = (float3)(0.0f, 0.0f, 0.0f);
-    ray.direction_inverse = 1.0f / ray.direction;
-    return ray;
+    return createRay((float3)(0.0f, 0.0f, 0.0f),
+                     direction);
 }
 
 float3 rayPoint(struct Ray ray, float t)
@@ -146,6 +144,7 @@ struct RayHit traceRayAgainstBVH(struct Ray ray,
     }
     return nearestHit;
 }
+
 void kernel tracer(write_only image2d_t img,
                    global const struct Light* lights,
                    int numLights,

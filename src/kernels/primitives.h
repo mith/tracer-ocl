@@ -96,4 +96,6 @@ struct Triangle constructTriangle(global const struct Vertex* vertices,
                                   int numTriangle,
                                   struct Mesh);
 
+struct Ray createRay(float3 origin, float3 direction);
+
 #endif

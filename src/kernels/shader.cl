@@ -43,10 +43,8 @@ float3 gatherLight(struct Ray ray,
     for (int l = 0; l < numLights; l++) {
         struct Light light = lights[l];
         float3 lightDir = normalize(light.location - hit.location);
-        struct Ray rayToLight;
-        rayToLight.origin = hit.location;
-        rayToLight.direction = lightDir;
-        rayToLight.direction_inverse = 1 / lightDir;
+        struct Ray rayToLight = createRay(hit.location,
+                                          lightDir);
         if (!occluded(rayToLight,
                             distance(hit.location,light.location),
                             hit.object,
