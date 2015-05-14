@@ -4,15 +4,18 @@
 #include <OpenCL/cl_gl_ext.h>
 #include <OpenCL/cl_platform.h>
 #include <OpenGL/gl3.h>
+#define GLFW_EXPOSE_NATIVE_COCOA
+#define GLFW_EXPOSE_NATIVE_NSGL
 #elif defined __linux__
 #include <CL/cl.h>
 #include <CL/cl_gl.h>
 #include <CL/cl_gl_ext.h>
 #include <CL/cl_platform.h>
 #include "gl3.h"
+#define GLFW_EXPOSE_NATIVE_X11
+#define GLFW_EXPOSE_NATIVE_GLX
 #endif
 
-#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <tuple>
 #include <algorithm>
@@ -22,6 +25,8 @@
 #include "Tracer.hpp"
 #include "Scene.hpp"
 #include "Drawer.hpp"
+
+#include <GLFW/glfw3native.h>
 
 void glfw_error(int error, const char* description)
 {
@@ -40,7 +45,7 @@ void window_resize_callback(GLFWwindow* /*window*/, int width, int height)
     glViewport(0, 0, (GLsizei)width, (GLsizei)height);
 }
 
-std::tuple<cl::Context, cl::Device, cl::CommandQueue> init_cl(const std::string& device_name) 
+std::tuple<cl::Context, cl::Device, cl::CommandQueue> init_cl(const std::string& device_name, GLFWwindow* window) 
 {
     std::vector<cl::Platform> all_platforms;
     cl::Platform::get(&all_platforms);
@@ -81,17 +86,17 @@ std::tuple<cl::Context, cl::Device, cl::CommandQueue> init_cl(const std::string&
         CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
         (cl_context_properties) CGLGetShareGroup(CGLGetCurrentContext()),
 #elif defined __linux__
-        CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
-        CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
+        CL_GL_CONTEXT_KHR, (cl_context_properties)glfwGetGLXContext(window),
+        CL_GLX_DISPLAY_KHR, (cl_context_properties)glfwGetX11Display(),
         CL_CONTEXT_PLATFORM, (cl_context_properties)(all_platforms[0])(),
 #endif
         0
     };
 
 #ifdef __APPLE__
-    cl::Context context = cl::Context(device, properties, clLogMessagesToStdoutAPPLE);
+    cl::Context context (device, properties, clLogMessagesToStdoutAPPLE);
 #elif defined __linux__
-    cl::Context context = cl::Context(device, properties, &contextCallback);
+    cl::Context context (device, properties, &contextCallback);
 #endif
     cl::CommandQueue queue = cl::CommandQueue(context, device);
 
@@ -139,7 +144,7 @@ int main()
     cl::Context context;
     cl::Device device;
     cl::CommandQueue queue;
-    std::tie(context, device, queue) = init_cl(device_name);
+    std::tie(context, device, queue) = init_cl(device_name, window);
     Tracer tracer(context, device, queue);
 
     Drawer drawer(width, height);
