@@ -8,7 +8,7 @@ find_package(Boost REQUIRED COMPONENTS iostreams)
 pkg_search_module(GLFW REQUIRED glfw3)
 pkg_search_module(YAML REQUIRED yaml-cpp)
 
-file(GLOB SOURCES src/*.cpp)
+file(GLOB SOURCES src/*.cpp src/*.c)
 
 add_executable(tracer-ocl ${SOURCES})
 set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD 14)

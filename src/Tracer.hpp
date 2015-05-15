@@ -4,16 +4,14 @@
 #include <OpenCL/cl_gl.h>
 #include <OpenCL/cl_gl_ext.h>
 #include <OpenCL/cl_platform.h>
-#include <OpenGL/opengl.h>
-#include <OpenGL/gl3.h>
 #elif defined __linux__
 #include <CL/cl.h>
 #include <CL/cl_gl.h>
 #include <CL/cl_gl_ext.h>
 #include <CL/cl_platform.h>
-#include "gl3.h"
 #endif
 
+#include <glad/glad.h>
 #include <iostream>
 #include <vector>
 

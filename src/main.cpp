@@ -1,8 +1,8 @@
+#include <glad/glad.h>
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
 #include <OpenCL/cl_gl.h>
-#include <OpenCL/cl_gl_ext.h>
-#include <OpenCL/cl_platform.h>
+#include <OpenGL/OpenGL.h>
 #define GLFW_EXPOSE_NATIVE_COCOA
 #define GLFW_EXPOSE_NATIVE_NSGL
 #elif defined __linux__
@@ -14,8 +14,6 @@
 #define GLFW_EXPOSE_NATIVE_GLX
 #endif
 
-#define GLFW_INCLUDE_GLCOREARB
-#include <GLFW/glfw3.h>
 #include <tuple>
 #include <algorithm>
 
@@ -25,6 +23,7 @@
 #include "Scene.hpp"
 #include "Drawer.hpp"
 
+#include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
 void glfw_error(int error, const char* description)
@@ -123,6 +122,9 @@ GLFWwindow* init_gl(int width, int height)
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
+
+    gladLoadGL();
+
     glfwSetKeyCallback(window, key_callback);
     glfwSetWindowSizeCallback(window, window_resize_callback);
     window_resize_callback(window, width, height);
