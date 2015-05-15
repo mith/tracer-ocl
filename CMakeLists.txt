@@ -30,4 +30,5 @@ target_link_libraries(tracer-ocl ${OpenCL_LIBRARIES}
                                  ${GLFW_LIBRARIES} 
                                  ${OPENGL_LIBRARIES} 
                                  ${Boost_LIBRARIES}
-                                 ${YAML_LIBRARIES})
+                                 ${YAML_LIBRARIES}
+                                 ${CMAKE_DL_LIBS})
