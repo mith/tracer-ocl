@@ -1,9 +1,4 @@
-#ifdef __APPLE__
-#include <OpenGL/gl3.h>
-#elif defined __linux__
-#include "gl3.h"
-#endif
-
+#define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
 #include <string>
 

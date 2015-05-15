@@ -87,6 +87,24 @@ struct RayHit traceRayAgainstSpheres(struct Ray ray,
     return nearestHit;
 }
 
+float3 barycentric(float3 loc, struct Triangle triangle)
+{
+    float3 v0 = triangle.b.position - triangle.a.position;
+    float3 v1 = triangle.c.position - triangle.a.position;
+    float3 v2 = loc - triangle.a.position;
+
+    float d00 = dot(v0, v0);
+    float d01 = dot(v0, v1);
+    float d11 = dot(v1, v1);
+    float d20 = dot(v2, v0);
+    float d21 = dot(v2, v1);
+    float invDenom = 1.0f / (d00 * d11 - d01 * d01);
+    float v = (d11 * d20 - d01 * d21) * invDenom;
+    float w = (d00 * d21 - d01 * d20) * invDenom;
+    float u = 1.0f - v - w;
+    return (float3)(u, v, w);
+}
+
 struct RayHit traceRayAgainstMesh(struct Ray ray,
                                   global const struct Vertex* vertices,
                                   global const struct Indices* indices,
@@ -104,12 +122,13 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
 
         if (nearestHit.dist > t && t > 0.0f) {
             float3 loc = rayPoint(ray, t);
-            float3 v = triangle.b.position - triangle.a.position;
-            float3 w = triangle.c.position - triangle.a.position;
-            float3 normal = normalize(cross(v, w));
+            float3 bc = barycentric(loc, triangle);
+            float3 normal = bc.x * triangle.a.normal 
+                          + bc.y * triangle.b.normal
+                          + bc.z * triangle.c.normal;
             nearestHit.dist = t;
             nearestHit.location = loc;
-            nearestHit.normal = -normal;
+            nearestHit.normal = normalize(normal);
             nearestHit.material = mesh.material;
             nearestHit.object = &indices[p];
         }

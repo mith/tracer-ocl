@@ -9,6 +9,7 @@ struct RayHit traceRayAgainstPlanes(struct Ray ray,
                                     int numPlanes);
 float lengthSquared(float3 a);
 float3 reflect(float3 v, float3 n);
+float3 barycentric(float3 loc, struct Triangle triangle);
 struct RayHit traceRayAgainstSpheres(struct Ray ray,
                                      global const struct Sphere* spheres,
                                      int numSpheres);

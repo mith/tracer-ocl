@@ -2,6 +2,7 @@
 
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <algorithm>
+#include <cmath>
 
 #include "iqm.h"
 
@@ -40,14 +41,16 @@ Mesh load_mesh(std::string filename)
     mesh.vertices.reserve(ih->num_vertexes);
     mesh.indices.reserve(ih->num_triangles);
 
-    std::array<float, 3> min {{0.0f, 0.0f, 0.0f}};
-    std::array<float, 3> max {{0.0f, 0.0f, 0.0f}};
+    std::array<float, 3> min {{INFINITY, INFINITY, INFINITY}};
+    std::array<float, 3> max {{-INFINITY, -INFINITY, -INFINITY}};
 
     auto positions = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + posva->offset);
     auto normals = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + normalva->offset);
+    auto uvs = reinterpret_cast<const std::array<float, 2>*>(mesh_file.data() + uvva->offset);
     for(unsigned int i = 0; i < ih->num_vertexes; i++) {
         auto pos = positions[i];
         auto nor = normals[i];
+        auto uv = uvs[i];
 
 
         for (int j = 0; j < 3; j++) {

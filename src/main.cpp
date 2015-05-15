@@ -3,7 +3,6 @@
 #include <OpenCL/cl_gl.h>
 #include <OpenCL/cl_gl_ext.h>
 #include <OpenCL/cl_platform.h>
-#include <OpenGL/gl3.h>
 #define GLFW_EXPOSE_NATIVE_COCOA
 #define GLFW_EXPOSE_NATIVE_NSGL
 #elif defined __linux__
@@ -11,11 +10,11 @@
 #include <CL/cl_gl.h>
 #include <CL/cl_gl_ext.h>
 #include <CL/cl_platform.h>
-#include "gl3.h"
 #define GLFW_EXPOSE_NATIVE_X11
 #define GLFW_EXPOSE_NATIVE_GLX
 #endif
 
+#define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
 #include <tuple>
 #include <algorithm>

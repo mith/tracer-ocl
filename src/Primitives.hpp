@@ -42,9 +42,11 @@ struct Material {
 struct Vertex {
     cl_float3 position;
     cl_float3 normal;
+    cl_float2 uv;
 
     Vertex() {} 
-    Vertex (std::array<float, 3> & p, std::array<float, 3> & n)
+    Vertex (std::array<float, 3> & p, 
+            std::array<float, 3> & n)
         : position{{p[0], p[1], p[2]}}
         , normal{{n[0], n[1], n[2]}}
     {}
