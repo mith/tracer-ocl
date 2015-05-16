@@ -54,6 +54,9 @@ struct Mesh {
 
 struct Vertex {
     float3 position;
+};
+
+struct VertexAttributes {
     float3 normal;
     float2 uv;
 };
@@ -64,8 +67,11 @@ struct Indices {
 
 struct Triangle {
     struct Vertex a;
+    global const struct VertexAttributes* aa;
     struct Vertex b;
+    global const struct VertexAttributes* ba;
     struct Vertex c;
+    global const struct VertexAttributes* ca;
 };
 
 struct AABB {
@@ -86,6 +92,7 @@ struct Geometry {
     global const struct Plane* planes;
     int numPlanes;
     global const struct Vertex* vertices;
+    global const struct VertexAttributes* vertexAttributes;
     global const struct Indices* indices;
     global const struct Mesh* meshes;
     int numMeshes;
@@ -94,6 +101,7 @@ struct Geometry {
 };
 
 struct Triangle constructTriangle(global const struct Vertex* vertices,
+                                  global const struct VertexAttributes* vertexAttributes,
                                   global const struct Indices* indices,
                                   int numTriangle,
                                   struct Mesh);

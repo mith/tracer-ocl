@@ -30,6 +30,7 @@ public:
     std::vector<Plane> planes;
     std::vector<Sphere> spheres;
     std::vector<Vertex> vertices;
+    std::vector<VertexAttributes> vertexAttributes;
     std::vector<Indice> indices;
     std::vector<Mesh> meshes;
     std::vector<CLMesh> clmeshes;
@@ -42,6 +43,7 @@ public:
     cl::Buffer spheresBuffer;
     cl::Buffer materialsBuffer;
     cl::Buffer vertexBuffer;
+    cl::Buffer vertexAttributesBuffer;
     cl::Buffer indicesBuffer;
     cl::Buffer meshesBuffer;
     cl::Buffer bvhBuffer;

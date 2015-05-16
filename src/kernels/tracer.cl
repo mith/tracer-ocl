@@ -107,6 +107,7 @@ float3 barycentric(float3 loc, struct Triangle triangle)
 
 struct RayHit traceRayAgainstMesh(struct Ray ray,
                                   global const struct Vertex* vertices,
+                                  global const struct VertexAttributes* vertexAttributes,
                                   global const struct Indices* indices,
                                   global const struct Mesh* meshes,
                                   int numMesh)
@@ -116,16 +117,16 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
 
     struct Mesh mesh = meshes[numMesh];
     for (int p = 0; p < mesh.num_triangles; p++) {
-        struct Triangle triangle = constructTriangle(vertices, indices, p,
-                                                     mesh);
+        struct Triangle triangle = constructTriangle(vertices, vertexAttributes,
+                                                     indices, p, mesh);
         float t = intersectTriangle(ray, triangle);
 
         if (nearestHit.dist > t && t > 0.0f) {
             float3 loc = rayPoint(ray, t);
             float3 bc = barycentric(loc, triangle);
-            float3 normal = bc.x * triangle.a.normal 
-                          + bc.y * triangle.b.normal
-                          + bc.z * triangle.c.normal;
+            float3 normal = bc.x * triangle.aa->normal 
+                          + bc.y * triangle.ba->normal
+                          + bc.z * triangle.ca->normal;
             nearestHit.dist = t;
             nearestHit.location = loc;
             nearestHit.normal = normalize(normal);
@@ -140,6 +141,7 @@ struct RayHit traceRayAgainstBVH(struct Ray ray,
                                  global const struct BVHNode* bvh,
                                  int numBVHNodes,
                                  global const struct Vertex* vertices,
+                                 global const struct VertexAttributes* vertexAttributes,
                                  global const struct Indices* indices,
                                  global const struct Mesh* meshes,
                                  int numMeshes)
@@ -155,7 +157,8 @@ struct RayHit traceRayAgainstBVH(struct Ray ray,
                            * bvhnode.scale
                            + bvhnode.position;
         if (intersectAABB(ray, bvhnode.bounds)) {
-            struct RayHit hit = traceRayAgainstMesh(ray, vertices, indices, meshes, bvhnode.mesh);
+            struct RayHit hit = traceRayAgainstMesh(ray, vertices, vertexAttributes,
+                                                    indices, meshes, bvhnode.mesh);
             if (hit.dist < nearestHit.dist) {
                 nearestHit = hit;
             }
@@ -172,6 +175,7 @@ void kernel tracer(write_only image2d_t img,
                    global const struct Sphere* spheres,
                    int numSpheres,
                    global const struct Vertex* vertices,
+                   global const struct VertexAttributes* vertexAttributes,
                    global const struct Indices* indices,
                    global const struct Mesh* meshes,
                    int numMeshes,
@@ -184,7 +188,7 @@ void kernel tracer(write_only image2d_t img,
     struct RayHit planeHit = traceRayAgainstPlanes(ray, planes, numPlanes);
     struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
     struct RayHit meshHit = traceRayAgainstBVH(ray, bvh, numBVHNodes, vertices, 
-                                               indices, meshes, numMeshes);
+                                               vertexAttributes, indices, meshes, numMeshes);
 
     const struct Geometry geometry = {
         spheres,
@@ -192,6 +196,7 @@ void kernel tracer(write_only image2d_t img,
         planes,
         numPlanes,
         vertices,
+        vertexAttributes,
         indices,
         meshes,
         numMeshes,

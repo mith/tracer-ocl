@@ -94,6 +94,7 @@ bool occluded(struct Ray ray,
                     continue;
 
                 struct Triangle triangle = constructTriangle(geometry->vertices,
+                                                             geometry->vertexAttributes,
                                                              geometry->indices,
                                                              p, mesh);
                 float t = intersectTriangle(ray, triangle);

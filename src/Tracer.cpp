@@ -73,14 +73,15 @@ void Tracer::set_scene(const Scene& scene)
     tracer_krnl.setArg(6, (cl_int)scene.spheres.size());
 
     tracer_krnl.setArg(7, scene.vertexBuffer);
-    tracer_krnl.setArg(8, scene.indicesBuffer);
-    tracer_krnl.setArg(9, scene.meshesBuffer);
-    tracer_krnl.setArg(10, (cl_int)scene.clmeshes.size());
+    tracer_krnl.setArg(8, scene.vertexAttributesBuffer);
+    tracer_krnl.setArg(9, scene.indicesBuffer);
+    tracer_krnl.setArg(10, scene.meshesBuffer);
+    tracer_krnl.setArg(11, (cl_int)scene.clmeshes.size());
 
-    tracer_krnl.setArg(11, scene.bvhBuffer);
-    tracer_krnl.setArg(12, (cl_int)scene.bvh.size());
+    tracer_krnl.setArg(12, scene.bvhBuffer);
+    tracer_krnl.setArg(13, (cl_int)scene.bvh.size());
 
-    tracer_krnl.setArg(13, scene.materialsBuffer);
+    tracer_krnl.setArg(14, scene.materialsBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)

@@ -58,7 +58,8 @@ Mesh load_mesh(std::string filename)
             max[j] = std::max(pos[j], max[j]);
         }
 
-        mesh.vertices.emplace_back(pos, nor);
+        mesh.vertices.emplace_back(pos);
+        mesh.vertexAttributes.emplace_back(nor);
     }
 
     auto triangles = reinterpret_cast<const std::array<unsigned int, 3>*>(mesh_file.data() + ih->ofs_triangles);

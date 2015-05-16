@@ -41,14 +41,19 @@ struct Material {
 
 struct Vertex {
     cl_float3 position;
+
+    Vertex (std::array<float, 3> & p)
+        : position{{p[0], p[1], p[2]}}
+    {}
+};
+
+struct VertexAttributes {
     cl_float3 normal;
     cl_float2 uv;
 
-    Vertex() {} 
-    Vertex (std::array<float, 3> & p, 
-            std::array<float, 3> & n)
-        : position{{p[0], p[1], p[2]}}
-        , normal{{n[0], n[1], n[2]}}
+    VertexAttributes (std::array<float, 3> & n)
+        : normal{{n[0], n[1], n[2]}}
+        , uv{{0.0f, 0.0f}}
     {}
 };
 
@@ -66,6 +71,7 @@ struct AABB {
 
 struct Mesh {
     std::vector<Vertex> vertices;
+    std::vector<VertexAttributes> vertexAttributes;
     std::vector<Indice> indices;
     AABB bounds;
 };

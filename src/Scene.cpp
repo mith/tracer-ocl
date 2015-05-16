@@ -60,6 +60,9 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
         scene.vertices.insert(scene.vertices.end(), 
                               mesh.vertices.begin(), 
                               mesh.vertices.end());
+        scene.vertexAttributes.insert(scene.vertexAttributes.end(),
+                                      mesh.vertexAttributes.begin(),
+                                      mesh.vertexAttributes.end());
         scene.indices.insert(scene.indices.end(), 
                                mesh.indices.begin(), 
                                mesh.indices.end());
@@ -77,6 +80,8 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
                                        scene.materials.end(), true);
     scene.vertexBuffer = cl::Buffer(context, scene.vertices.begin(),
                                     scene.vertices.end(), true);
+    scene.vertexAttributesBuffer = cl::Buffer(context, scene.vertexAttributes.begin(),
+                                              scene.vertexAttributes.end(), true);
     scene.indicesBuffer = cl::Buffer(context, scene.indices.begin(),
                                      scene.indices.end(), true);
     scene.meshesBuffer = cl::Buffer(context, scene.clmeshes.begin(),
