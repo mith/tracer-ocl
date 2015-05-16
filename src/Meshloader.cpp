@@ -44,13 +44,17 @@ Mesh load_mesh(std::string filename)
     std::array<float, 3> min {{INFINITY, INFINITY, INFINITY}};
     std::array<float, 3> max {{-INFINITY, -INFINITY, -INFINITY}};
 
-    auto positions = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + posva->offset);
-    auto normals = reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + normalva->offset);
-    auto uvs = reinterpret_cast<const std::array<float, 2>*>(mesh_file.data() + uvva->offset);
+    auto positions = 
+        reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + posva->offset);
+    auto normals = 
+        reinterpret_cast<const std::array<float, 3>*>(mesh_file.data() + normalva->offset);
+    auto texcoords = 
+        reinterpret_cast<const std::array<float, 2>*>(mesh_file.data() + uvva->offset);
+
     for(unsigned int i = 0; i < ih->num_vertexes; i++) {
         auto pos = positions[i];
         auto nor = normals[i];
-        auto uv = uvs[i];
+        auto tc = texcoords[i];
 
 
         for (int j = 0; j < 3; j++) {
@@ -59,7 +63,7 @@ Mesh load_mesh(std::string filename)
         }
 
         mesh.vertices.emplace_back(pos);
-        mesh.vertexAttributes.emplace_back(nor);
+        mesh.vertexAttributes.emplace_back(nor, tc);
     }
 
     auto triangles = reinterpret_cast<const std::array<unsigned int, 3>*>(mesh_file.data() + ih->ofs_triangles);

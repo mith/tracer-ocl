@@ -49,11 +49,12 @@ struct Vertex {
 
 struct VertexAttributes {
     cl_float3 normal;
-    cl_float2 uv;
+    cl_float2 texcoord;
 
-    VertexAttributes (std::array<float, 3> & n)
+    VertexAttributes (std::array<float, 3> & n,
+                      std::array<float, 2> & t)
         : normal{{n[0], n[1], n[2]}}
-        , uv{{0.0f, 0.0f}}
+        , texcoord{{t[0], t[1]}}
     {}
 };
 

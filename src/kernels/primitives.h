@@ -58,7 +58,7 @@ struct Vertex {
 
 struct VertexAttributes {
     float3 normal;
-    float2 uv;
+    float2 texcoord;
 };
 
 struct Indices {
