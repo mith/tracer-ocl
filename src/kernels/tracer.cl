@@ -146,7 +146,7 @@ void kernel tracer(write_only image2d_t img,
 
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (hit.dist > (float)(-INFINITY) && hit.dist < (float)INFINITY) {
-        color = (float3)(0.4f, 0.4f, 0.4);
+        color = (float3)(0.4f, 0.4f, 0.4f);
         //color = gatherLight(ray, hit, &geometry,
         //                    lights, numLights, materials);
     }

@@ -38,7 +38,7 @@ float3 gatherLight(struct Ray ray,
     struct Material material = materials[hit.material];
     float3 view = -normalize(hit.location);
     float3 normal = hit.normal;
-    float3 diffuse = (float3)read_imagef(material.diffuse, sampler, hit.texcoord);
+    float3 diffuse = (float3)(0.4f, 0.4f, 0.4f);//read_imagef(material.diffuse, sampler, hit.texcoord).xyz;
     float3 color = diffuse / 5;
     float roughness = material.roughness;
     float fresnel0 = material.fresnel0;

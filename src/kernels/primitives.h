@@ -26,7 +26,7 @@ struct Light {
 };
 
 struct Material {
-    image2d_t diffuse;
+    int diffuse;
     float fresnel0;
     float roughness;
 };
@@ -69,10 +69,10 @@ struct Indices {
 
 struct Triangle {
     struct Vertex a;
-    global const struct VertexAttributes* aa;
     struct Vertex b;
-    global const struct VertexAttributes* ba;
     struct Vertex c;
+    global const struct VertexAttributes* aa;
+    global const struct VertexAttributes* ba;
     global const struct VertexAttributes* ca;
 };
 
