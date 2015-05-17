@@ -26,6 +26,8 @@ float3 shade(float3 normal, float3 view,
     return clamp(color_add, 0.0f, 1.0f);
 }
 
+__constant sampler_t sampler = CLK_FILTER_NEAREST;
+
 float3 gatherLight(struct Ray ray,
                    struct RayHit hit,
                    const struct Geometry* geometry,
@@ -36,7 +38,8 @@ float3 gatherLight(struct Ray ray,
     struct Material material = materials[hit.material];
     float3 view = -normalize(hit.location);
     float3 normal = hit.normal;
-    float3 color = material.color / 7.0f;
+    float3 diffuse = (float3)read_imagef(material.diffuse, sampler, hit.texcoord);
+    float3 color = diffuse / 5;
     float roughness = material.roughness;
     float fresnel0 = material.fresnel0;
     
@@ -47,7 +50,7 @@ float3 gatherLight(struct Ray ray,
                                           lightDir);
         if (!occluded(rayToLight,
                             distance(hit.location,light.location),
-                            hit.object,
+                            hit.indice,
                             geometry)) {
             float3 halfVec = normalize(lightDir + view);
             float lightDist = distance(hit.location, light.location);
@@ -55,7 +58,7 @@ float3 gatherLight(struct Ray ray,
                               / (light.radius * light.radius), 0.0f, 1.0f);
             att *= att;
             color += att * shade(normal, view, lightDir, halfVec,
-                                 light.color, material.color, roughness, fresnel0);
+                                 light.color, diffuse, roughness, fresnel0);
         }
     }
     
@@ -64,20 +67,9 @@ float3 gatherLight(struct Ray ray,
 
 bool occluded(struct Ray ray,
               float targetDistance,
-              global const void* ignoredObject,
+              global const struct Indices* ignoredIndices,
               const struct Geometry* geometry)
 {
-    for (int s = 0; s < geometry->numSpheres; s++) {
-        if (&geometry->spheres[s] == ignoredObject)
-            continue;
-
-        struct Sphere sphere = geometry->spheres[s];
-        float t = intersectSphere(ray, sphere);
-        if (t < targetDistance && t > 0.0f) {
-            return true;
-        }
-    }
-
     for (int b = 0; b < geometry->numBVHNodes; b++) {
         struct BVHNode bvhnode = geometry->bvh[b];
         bvhnode.bounds.min = bvhnode.bounds.min
@@ -90,7 +82,7 @@ bool occluded(struct Ray ray,
      
             struct Mesh mesh = geometry->meshes[b];
             for (int p = 0; p < mesh.num_triangles; p++) {
-                if (&geometry->indices[p] == ignoredObject)
+                if (&geometry->indices[p] == ignoredIndices)
                     continue;
 
                 struct Triangle triangle = constructTriangle(geometry->vertices,

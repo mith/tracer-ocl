@@ -12,20 +12,9 @@
 #include <CL/cl_platform.h>
 #endif
 
+#include "cl.hpp"
 #include <vector>
 #include <array>
-
-struct Plane {
-    cl_float3 normal;
-    cl_float offset;
-    cl_int material;
-};
-
-struct Sphere {
-    cl_float3 center;
-    cl_float radius;
-    cl_int material;
-};
 
 struct Light {
     cl_float3 color;
@@ -34,7 +23,7 @@ struct Light {
 };
 
 struct Material {
-    cl_float3 color;
+    cl::Image2D diffuse;
     cl_float fresnel0;
     cl_float roughness;
 };

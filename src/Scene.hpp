@@ -27,8 +27,6 @@ class Scene {
     Scene(cl::Context context, cl::Device device, cl::CommandQueue queue);
 
 public:
-    std::vector<Plane> planes;
-    std::vector<Sphere> spheres;
     std::vector<Vertex> vertices;
     std::vector<VertexAttributes> vertexAttributes;
     std::vector<Indice> indices;
@@ -39,8 +37,6 @@ public:
     std::vector<Material> materials;
 
     cl::Buffer lightsBuffer;
-    cl::Buffer planesBuffer;
-    cl::Buffer spheresBuffer;
     cl::Buffer materialsBuffer;
     cl::Buffer vertexBuffer;
     cl::Buffer vertexAttributesBuffer;
@@ -52,3 +48,5 @@ public:
                 cl::Device device, cl::CommandQueue queue);
     void update();
 };
+
+cl::Image2D load_texture(const std::string & filename, cl::Context & context);

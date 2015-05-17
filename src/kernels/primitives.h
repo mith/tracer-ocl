@@ -12,9 +12,11 @@ struct Ray {
 struct RayHit {
     float3 location;
     float3 normal;
+    float2 texcoord;
     float dist;
     int material;
-    global const void* object;
+    global const struct Mesh* mesh;
+    global const struct Indices* indice;
 };
 
 struct Light {
@@ -24,7 +26,7 @@ struct Light {
 };
 
 struct Material {
-    float3 color;
+    image2d_t diffuse;
     float fresnel0;
     float roughness;
 };
@@ -87,10 +89,6 @@ struct BVHNode {
 };
 
 struct Geometry {
-    global const struct Sphere* spheres;
-    int numSpheres;
-    global const struct Plane* planes;
-    int numPlanes;
     global const struct Vertex* vertices;
     global const struct VertexAttributes* vertexAttributes;
     global const struct Indices* indices;

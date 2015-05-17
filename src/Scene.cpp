@@ -4,6 +4,8 @@
 #include "GLFW/glfw3.h"
 #include "yaml-cpp/yaml.h"
 
+#include "lodepng.h"
+
 #include <cmath>
 
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
@@ -36,10 +38,15 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
     YAML::Node scene_file = YAML::LoadFile(filename);
 
     Scene scene(context, device, queue);
-    scene.planes = scene_file["planes"].as<std::vector<Plane>>();
-    scene.spheres = scene_file["spheres"].as<std::vector<Sphere>>();
     scene.lights = scene_file["lights"].as<std::vector<Light>>();
-    scene.materials = scene_file["materials"].as<std::vector<Material>>();
+
+    for(auto n : scene_file["materials"]) {
+        Material mat;
+        mat.diffuse = load_texture(n["diffuse"].as<std::string>(), context);
+        mat.fresnel0 = n["fresnel0"].as<float>();
+        mat.roughness = n["roughness"].as<float>();
+        scene.materials.push_back(mat);
+    }
 
     for(auto n : scene_file["meshes"]) {
         Mesh mesh = load_mesh(n["file"].as<std::string>());
@@ -70,10 +77,6 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
         scene.bvh.push_back(bvhnode);
     }
 
-    scene.planesBuffer = cl::Buffer(context, scene.planes.begin(), 
-                                    scene.planes.end(), true);
-    scene.spheresBuffer = cl::Buffer(context, scene.spheres.begin(), 
-                                     scene.spheres.end(), true);
     scene.lightsBuffer = cl::Buffer(context, scene.lights.begin(), 
                                     scene.lights.end(), true);
     scene.materialsBuffer = cl::Buffer(context, scene.materials.begin(), 
@@ -93,6 +96,16 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
     return scene;
 }
 
+cl::Image2D load_texture(const std::string & filename, cl::Context & context)
+{
+    std::vector<unsigned char> pixels;
+    unsigned int width, height;
+    unsigned int error =
+        lodepng::decode(pixels, width, height, filename.c_str());
+    auto format = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
+    return cl::Image2D(context, CL_MEM_READ_ONLY, format, width, height);
+}
+
 namespace YAML {
     template<>
     struct convert<cl_float3> {
@@ -109,35 +122,6 @@ namespace YAML {
     };
 
     template<>
-    struct convert<Plane> {
-        static bool decode(const Node& node, Plane& plane) {
-            if (node.size() != 3) {
-                return false;
-            }
-
-            plane.normal = node["normal"].as<cl_float3>();
-            plane.offset = node["offset"].as<cl_float>();
-            plane.material = node["material"].as<cl_int>();
-
-            return true; 
-        }
-    };
-
-    template<>
-    struct convert<Sphere> {
-        static bool decode(const Node& node, Sphere& sphere) {
-            if (node.size() != 3) {
-                return false;
-            }
-
-            sphere.center = node["center"].as<cl_float3>();
-            sphere.radius = node["radius"].as<cl_float>();
-            sphere.material = node["material"].as<cl_int>();
-            return true;
-        }
-    };
-
-    template<>
     struct convert<Light> {
         static bool decode(const Node& node, Light& light) {
             if (node.size() != 3) {
@@ -147,20 +131,6 @@ namespace YAML {
             light.color = node["color"].as<cl_float3>();
             light.location = node["location"].as<cl_float3>();
             light.radius = node["radius"].as<cl_float>();
-            return true;
-        }
-    };
-
-    template<>
-    struct convert<Material> {
-        static bool decode(const Node& node, Material& material) {
-            if (node.size() != 3) {
-                return false;
-            }
-
-            material.color = node["color"].as<cl_float3>();
-            material.fresnel0 = node["fresnel0"].as<cl_float>();
-            material.roughness = node["roughness"].as<cl_float>();
             return true;
         }
     };

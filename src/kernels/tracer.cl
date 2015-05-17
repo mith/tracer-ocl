@@ -36,57 +36,6 @@ float3 reflect(float3 i, float3 n)
     return i - 2.0f * n * dot(n, i);
 }
 
-struct RayHit traceRayAgainstPlanes(struct Ray ray,
-                                    global const struct Plane* planes,
-                                    int numPlanes)
-{
-    struct RayHit nearestHit;
-    nearestHit.dist = (float)(INFINITY);
-    nearestHit.material = -1;
-
-    for (int p = 0; p < numPlanes; p++) {
-        struct Plane plane = planes[p];
-
-        float t = intersectPlane(ray, plane);
-
-        if (nearestHit.dist > t && t > 0.0f) {
-            float3 loc = rayPoint(ray, t);
-            nearestHit.dist = t;
-            nearestHit.location = loc;
-            nearestHit.normal = plane.normal;
-            nearestHit.material = plane.material;
-            nearestHit.object = &planes[p];
-        }
-    }
-    return nearestHit;
-}
-
-struct RayHit traceRayAgainstSpheres(struct Ray ray,
-                                     global const struct Sphere* spheres,
-                                     int numSpheres)
-{
-    struct RayHit nearestHit;
-    nearestHit.dist = (float)(INFINITY);
-    nearestHit.material = -1;
-
-    for (int s = 0; s < numSpheres; s++) {
-        struct Sphere sphere = spheres[s];
-        float t = intersectSphere(ray, sphere);
-
-        if (nearestHit.dist > t && t > 0.0f) {
-            float3 loc = rayPoint(ray, t);
-            float3 normal = normalize(loc - sphere.center);
-            nearestHit.dist = t;
-            nearestHit.location = loc;
-            nearestHit.normal = normal;
-            nearestHit.material = sphere.material;
-            nearestHit.object = &spheres[s];
-        }
-    }
-
-    return nearestHit;
-}
-
 float3 barycentric(float3 loc, struct Triangle triangle)
 {
     float3 v0 = triangle.b.position - triangle.a.position;
@@ -115,10 +64,10 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
     struct RayHit nearestHit;
     nearestHit.dist = (float)(INFINITY);
 
-    struct Mesh mesh = meshes[numMesh];
-    for (int p = 0; p < mesh.num_triangles; p++) {
+    global const struct Mesh* mesh = &meshes[numMesh];
+    for (int p = 0; p < mesh->num_triangles; p++) {
         struct Triangle triangle = constructTriangle(vertices, vertexAttributes,
-                                                     indices, p, mesh);
+                                                     indices, p, *mesh);
         float3 uvt = intersectTriangle(ray, triangle);
 
         if (nearestHit.dist > uvt.z && uvt.z > 0.0f) {
@@ -130,8 +79,9 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
             nearestHit.dist = uvt.z;
             nearestHit.location = loc;
             nearestHit.normal = normalize(normal);
-            nearestHit.material = mesh.material;
-            nearestHit.object = &indices[p];
+            nearestHit.material = mesh->material;
+            nearestHit.mesh = mesh;
+            nearestHit.indice = &indices[p];
         }
     }
     return nearestHit;
@@ -170,10 +120,6 @@ struct RayHit traceRayAgainstBVH(struct Ray ray,
 void kernel tracer(write_only image2d_t img,
                    global const struct Light* lights,
                    int numLights,
-                   global const struct Plane* planes,
-                   int numPlanes,
-                   global const struct Sphere* spheres,
-                   int numSpheres,
                    global const struct Vertex* vertices,
                    global const struct VertexAttributes* vertexAttributes,
                    global const struct Indices* indices,
@@ -185,16 +131,10 @@ void kernel tracer(write_only image2d_t img,
 {
     const int2 coord = (int2)(get_global_id(0), get_global_id(1));
     struct Ray ray = createCameraRay(coord);
-    struct RayHit planeHit = traceRayAgainstPlanes(ray, planes, numPlanes);
-    struct RayHit sphereHit = traceRayAgainstSpheres(ray, spheres, numSpheres);
-    struct RayHit meshHit = traceRayAgainstBVH(ray, bvh, numBVHNodes, vertices, 
+    struct RayHit hit = traceRayAgainstBVH(ray, bvh, numBVHNodes, vertices, 
                                                vertexAttributes, indices, meshes, numMeshes);
 
     const struct Geometry geometry = {
-        spheres,
-        numSpheres,
-        planes,
-        numPlanes,
         vertices,
         vertexAttributes,
         indices,
@@ -205,15 +145,10 @@ void kernel tracer(write_only image2d_t img,
     };
 
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
-    if (planeHit.dist < sphereHit.dist && planeHit.dist < meshHit.dist) {
-        color = gatherLight(ray, planeHit, &geometry,
-                            lights, numLights, materials);
-    } else if (sphereHit.dist < meshHit.dist) {
-        color = gatherLight(ray, sphereHit, &geometry,
-                            lights, numLights, materials);
-    } else {
-        color = gatherLight(ray, meshHit, &geometry,
-                            lights, numLights, materials);
+    if (hit.dist > (float)(-INFINITY) && hit.dist < (float)INFINITY) {
+        color = (float3)(0.4f, 0.4f, 0.4);
+        //color = gatherLight(ray, hit, &geometry,
+        //                    lights, numLights, materials);
     }
 
     write_imagef(img, coord, (float4)(color, 1.0f));

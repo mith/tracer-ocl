@@ -15,6 +15,6 @@ float3 gatherLight(struct Ray ray,
                    global const struct Material* materials);
 bool occluded(struct Ray ray,
                     float targetDistance,
-                    global const void* ignoredObject,
+                    global const struct Indices* ignoredIndices,
                     const struct Geometry* geometry);
 #endif
