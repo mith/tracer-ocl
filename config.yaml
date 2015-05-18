@@ -1,4 +1,4 @@
 width: 1024
 height: 512
-compute_device: "Barts"
+compute_device: "GeForce GT 650M"
 scene: "cornell.yaml"

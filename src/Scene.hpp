@@ -35,9 +35,11 @@ public:
     std::vector<BVHNode> bvh;
     std::vector<Light> lights;
     std::vector<Material> materials;
+    std::vector<unsigned char> texture_array;
 
     cl::Buffer lightsBuffer;
     cl::Buffer materialsBuffer;
+    cl::Image2DArray texturesBuffer;
     cl::Buffer vertexBuffer;
     cl::Buffer vertexAttributesBuffer;
     cl::Buffer indicesBuffer;
@@ -49,4 +51,4 @@ public:
     void update();
 };
 
-cl::Image2D load_texture(const std::string & filename, cl::Context & context);
+std::vector<unsigned char> load_texture(const std::string & filename);

@@ -23,7 +23,7 @@ struct Light {
 };
 
 struct Material {
-    cl::Image2D diffuse;
+    cl_int diffuse;
     cl_float fresnel0;
     cl_float roughness;
 };

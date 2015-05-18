@@ -42,7 +42,10 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
 
     for(auto n : scene_file["materials"]) {
         Material mat;
-        mat.diffuse = load_texture(n["diffuse"].as<std::string>(), context);
+        auto diffuse = load_texture(n["diffuse"].as<std::string>());
+        scene.texture_array.insert(scene.texture_array.end(),
+                                   diffuse.begin(),
+                                   diffuse.end());
         mat.fresnel0 = n["fresnel0"].as<float>();
         mat.roughness = n["roughness"].as<float>();
         scene.materials.push_back(mat);
@@ -81,6 +84,10 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
                                     scene.lights.end(), true);
     scene.materialsBuffer = cl::Buffer(context, scene.materials.begin(), 
                                        scene.materials.end(), true);
+    auto format = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
+    scene.texturesBuffer = cl::Image2DArray(context, CL_MEM_READ_ONLY,
+                                            format, (size_t)scene_file["materials"].size(),
+                                            512, 512, 0, 0, scene.texture_array.data());
     scene.vertexBuffer = cl::Buffer(context, scene.vertices.begin(),
                                     scene.vertices.end(), true);
     scene.vertexAttributesBuffer = cl::Buffer(context, scene.vertexAttributes.begin(),
@@ -96,14 +103,13 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
     return scene;
 }
 
-cl::Image2D load_texture(const std::string & filename, cl::Context & context)
+std::vector<unsigned char> load_texture(const std::string & filename)
 {
     std::vector<unsigned char> pixels;
     unsigned int width, height;
     unsigned int error =
         lodepng::decode(pixels, width, height, filename.c_str());
-    auto format = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
-    return cl::Image2D(context, CL_MEM_READ_ONLY, format, width, height);
+    return pixels;
 }
 
 namespace YAML {
