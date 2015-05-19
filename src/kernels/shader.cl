@@ -26,7 +26,9 @@ float3 shade(float3 normal, float3 view,
     return clamp(color_add, 0.0f, 1.0f);
 }
 
-__constant sampler_t sampler = CLK_FILTER_NEAREST;
+__constant sampler_t sampler = CLK_FILTER_NEAREST 
+                             | CLK_NORMALIZED_COORDS_TRUE
+                             | CLK_ADDRESS_CLAMP_TO_EDGE;
 
 float3 gatherLight(struct Ray ray,
                    struct RayHit hit,
@@ -39,7 +41,10 @@ float3 gatherLight(struct Ray ray,
     struct Material material = materials[hit.material];
     float3 view = -normalize(hit.location);
     float3 normal = hit.normal;
-    float4 diffuse = read_imagef(textures, sampler, (float4)(hit.texcoord, convert_float(material.diffuse), 0.0f));
+    uint4 diffuse = read_imageui(textures, sampler, 
+                                 (float4)(hit.texcoord.x, 
+                                          hit.texcoord.y, 
+                                          convert_float(material.diffuse), 0.0f));
     //float3 color = diffuse.xyz;
     //float roughness = material.roughness;
     //float fresnel0 = material.fresnel0;
@@ -63,7 +68,7 @@ float3 gatherLight(struct Ray ray,
     //    }
     //}
     
-    return (float3)(diffuse.xyz);
+    return convert_float3(diffuse.xyz);
 }
 
 bool occluded(struct Ray ray,

@@ -64,10 +64,10 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
     struct RayHit nearestHit;
     nearestHit.dist = (float)(INFINITY);
 
-    global const struct Mesh* mesh = &meshes[numMesh];
-    for (int p = 0; p < mesh->num_triangles; p++) {
+    struct Mesh mesh = meshes[numMesh];
+    for (int p = 0; p < mesh.num_triangles; p++) {
         struct Triangle triangle = constructTriangle(vertices, vertexAttributes,
-                                                     indices, p, *mesh);
+                                                     indices, p, mesh);
         float3 uvt = intersectTriangle(ray, triangle);
 
         if (nearestHit.dist > uvt.z && uvt.z > 0.0f) {
@@ -79,8 +79,8 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
             nearestHit.dist = uvt.z;
             nearestHit.location = loc;
             nearestHit.normal = normalize(normal);
-            nearestHit.material = mesh->material;
-            nearestHit.mesh = mesh;
+            nearestHit.material = mesh.material;
+            nearestHit.mesh = &meshes[numMesh];
             nearestHit.indice = &indices[p];
         }
     }

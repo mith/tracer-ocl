@@ -88,6 +88,16 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
     scene.texturesBuffer = cl::Image2DArray(context, CL_MEM_READ_ONLY,
                                             format, (size_t)scene_file["materials"].size(),
                                             512, 512, 0, 0, scene.texture_array.data());
+
+    std::cout << "texture size:" 
+              << (scene.texturesBuffer.getImageInfo<CL_IMAGE_FORMAT>().image_channel_data_type == CL_UNSIGNED_INT8)
+              << std::endl;
+
+    cl::size_t<3> ori;
+    ori[0] = 0; ori[1] = 0; ori[2] = 0;
+    cl::size_t<3> sz;
+    sz[0] = 512; sz[1] = 512; sz[2] = 1;
+            
     scene.vertexBuffer = cl::Buffer(context, scene.vertices.begin(),
                                     scene.vertices.end(), true);
     scene.vertexAttributesBuffer = cl::Buffer(context, scene.vertexAttributes.begin(),
