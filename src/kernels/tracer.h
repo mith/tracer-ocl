@@ -32,4 +32,4 @@ void kernel tracer(write_only image2d_t img,
                    global const struct BVHNode* bvh,
                    int numBVHNodes,
                    global const struct Material* materials,
-                   read_only image2d_t textures);
+                   read_only image2d_array_t textures);

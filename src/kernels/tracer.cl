@@ -128,7 +128,7 @@ void kernel tracer(write_only image2d_t img,
                    global const struct BVHNode* bvh,
                    int numBVHNodes,
                    global const struct Material* materials,
-                   read_only image2d_t textures)
+                   read_only image2d_array_t textures)
 {
     const int2 coord = (int2)(get_global_id(0), get_global_id(1));
     struct Ray ray = createCameraRay(coord);
@@ -147,9 +147,9 @@ void kernel tracer(write_only image2d_t img,
 
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (hit.dist > (float)(-INFINITY) && hit.dist < (float)INFINITY) {
-        color = (float3)(0.4f, 0.4f, 0.4f);
-        //color = gatherLight(ray, hit, &geometry,
-        //                    lights, numLights, materials);
+        //color = (float3)(0.4f, 0.4f, 0.4f);
+        color = gatherLight(ray, hit, &geometry,
+                            lights, numLights, materials, textures);
     }
 
     write_imagef(img, coord, (float4)(color, 1.0f));

@@ -1,7 +1,7 @@
 meshes: 
     - file: "cube.iqm"
       position: [0.0, 0.0, -80.0]
-      scale: [1.5, 1.5, 1.5]
+      scale: [10.5, 10.5, 10.5]
       material: 0
 
 lights:

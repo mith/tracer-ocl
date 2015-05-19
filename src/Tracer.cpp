@@ -76,6 +76,7 @@ void Tracer::set_scene(const Scene& scene)
     tracer_krnl.setArg(9, (cl_int)scene.bvh.size());
 
     tracer_krnl.setArg(10, scene.materialsBuffer);
+    tracer_krnl.setArg(11, scene.texturesBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)
