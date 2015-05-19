@@ -27,29 +27,30 @@ float intersectSphere(struct Ray ray, struct Sphere sphere)
         return -b - sqrt(d);
 }
 
-float intersectTriangle(struct Ray ray, struct Triangle triangle)
+float3 intersectTriangle(struct Ray ray, struct Triangle triangle)
 {
+    float3 uvt;
     // Moller-Trumbore
     float3 e1 = triangle.b.position - triangle.a.position;
     float3 e2 = triangle.c.position - triangle.a.position;
     float3 P = cross(ray.direction, e2);
     float det = dot(e1, P);
-    if (det > -FLT_EPSILON && det < FLT_EPSILON) return INFINITY;
+    if (det > -FLT_EPSILON && det < FLT_EPSILON) return (float3)(INFINITY);
 
     float inv_det = 1.0f / det;
     float3 T = ray.origin - triangle.a.position;
-    float u = dot(T, P) * inv_det;
-    if (u < 0.0f || u > 1.0f) return INFINITY;
+    uvt.x = dot(T, P) * inv_det;
+    if (uvt.x < 0.0f || uvt.x > 1.0f) return (float3)(INFINITY);
 
     float3 Q = cross(T, e1);
-    float v = dot(ray.direction, Q) * inv_det;
-    if (v < 0.0f || u + v > 1.0f) return INFINITY;
+    float uvt.y = dot(ray.direction, Q) * inv_det;
+    if (uvt.y < 0.0f || uvt.x + uvt.y > 1.0f) return (float3)(INFINITY);
 
-    float t = dot(e2, Q) * inv_det;
-    if (t > FLT_EPSILON) {
-        return t;
+    float uvt.z = dot(e2, Q) * inv_det;
+    if (uvt.z > FLT_EPSILON) {
+        return uvt;
     } else {
-        return INFINITY;
+        return (float3)(INFINITY);
     }
 }
 
