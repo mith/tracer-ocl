@@ -97,8 +97,8 @@ bool occluded(struct Ray ray,
                                                              geometry->vertexAttributes,
                                                              geometry->indices,
                                                              p, mesh);
-                float t = intersectTriangle(ray, triangle);
-                if (t < targetDistance && t > 0.0f) {
+                float3 uvt = intersectTriangle(ray, triangle);
+                if (uvt.z < targetDistance && uvt.z > 0.0f) {
                     return true;
                 }
             }

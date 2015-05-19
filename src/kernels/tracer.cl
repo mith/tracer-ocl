@@ -119,15 +119,15 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
     for (int p = 0; p < mesh.num_triangles; p++) {
         struct Triangle triangle = constructTriangle(vertices, vertexAttributes,
                                                      indices, p, mesh);
-        float t = intersectTriangle(ray, triangle);
+        float3 uvt = intersectTriangle(ray, triangle);
 
-        if (nearestHit.dist > t && t > 0.0f) {
-            float3 loc = rayPoint(ray, t);
-            float3 bc = barycentric(loc, triangle);
-            float3 normal = bc.x * triangle.aa->normal 
-                          + bc.y * triangle.ba->normal
-                          + bc.z * triangle.ca->normal;
-            nearestHit.dist = t;
+        if (nearestHit.dist > uvt.z && uvt.z > 0.0f) {
+            float3 loc = rayPoint(ray, uvt.z);
+            float2 uv = uvt.xy;
+            float3 normal = uv.x * triangle.ba->normal 
+                          + uv.y * triangle.ca->normal
+                          + (1.0f - uv.x - uv.y) * triangle.aa->normal;
+            nearestHit.dist = uvt.z;
             nearestHit.location = loc;
             nearestHit.normal = normalize(normal);
             nearestHit.material = mesh.material;
