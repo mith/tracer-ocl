@@ -66,7 +66,12 @@ struct Mesh {
     AABB bounds;
 };
 
+struct Quaternion {
+    cl_float x, y, z, w;
+};
+
 struct CLMesh {
+    Quaternion orientation;
     cl_float3 position;
     cl_float3 scale;
 

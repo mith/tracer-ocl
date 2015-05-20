@@ -79,6 +79,7 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
             nearestHit.dist = uvt.z;
             nearestHit.location = loc;
             nearestHit.normal = normalize(normal);
+            nearestHit.texcoord = barycentric(loc, triangle).xy;
             nearestHit.material = mesh.material;
             nearestHit.mesh = &meshes[numMesh];
             nearestHit.indice = &indices[p];
@@ -147,9 +148,9 @@ void kernel tracer(write_only image2d_t img,
 
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (hit.dist > (float)(-INFINITY) && hit.dist < (float)INFINITY) {
-        //color = (float3)(0.4f, 0.4f, 0.4f);
-        color = gatherLight(ray, hit, &geometry,
-                            lights, numLights, materials, textures);
+        color = hit.normal;
+        //color = gatherLight(ray, hit, &geometry,
+        //                    lights, numLights, materials, textures);
     }
 
     write_imagef(img, coord, (float4)(color, 1.0f));

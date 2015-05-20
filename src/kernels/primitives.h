@@ -44,6 +44,7 @@ struct Sphere {
 };
 
 struct Mesh {
+    float4 orientation;
     float3 position;
     float3 scale;
 

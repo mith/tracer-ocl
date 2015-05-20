@@ -45,30 +45,30 @@ float3 gatherLight(struct Ray ray,
                                  (float4)(hit.texcoord.x, 
                                           hit.texcoord.y, 
                                           convert_float(material.diffuse), 0.0f));
-    //float3 color = diffuse.xyz;
-    //float roughness = material.roughness;
-    //float fresnel0 = material.fresnel0;
-    //
-    //for (int l = 0; l < numLights; l++) {
-    //    struct Light light = lights[l];
-    //    float3 lightDir = normalize(light.location - hit.location);
-    //    struct Ray rayToLight = createRay(hit.location,
-    //                                      lightDir);
-    //    if (!occluded(rayToLight,
-    //                        distance(hit.location,light.location),
-    //                        hit.indice,
-    //                        geometry)) {
-    //        float3 halfVec = normalize(lightDir + view);
-    //        float lightDist = distance(hit.location, light.location);
-    //        float att = clamp(1.0f - lightDist * lightDist
-    //                          / (light.radius * light.radius), 0.0f, 1.0f);
-    //        att *= att;
-    //        color += att * shade(normal, view, lightDir, halfVec,
-    //                             light.color, diffuse.xyz, roughness, fresnel0);
-    //    }
-    //}
+    float3 color = (convert_float3(diffuse.xyz) / 255.0f) * 0.4f;
+    float roughness = material.roughness;
+    float fresnel0 = material.fresnel0;
     
-    return convert_float3(diffuse.xyz);
+    for (int l = 0; l < numLights; l++) {
+        struct Light light = lights[l];
+        float3 lightDir = normalize(light.location - hit.location);
+        struct Ray rayToLight = createRay(hit.location,
+                                          lightDir);
+        if (!occluded(rayToLight,
+                            distance(hit.location,light.location),
+                            hit.indice,
+                            geometry)) {
+            float3 halfVec = normalize(lightDir + view);
+            float lightDist = distance(hit.location, light.location);
+            float att = clamp(1.0f - lightDist * lightDist
+                              / (light.radius * light.radius), 0.0f, 1.0f);
+            att *= att;
+            color += att * shade(normal, view, lightDir, halfVec,
+                                 light.color, convert_float3(diffuse.xyz) / 255.0f, roughness, fresnel0);
+        }
+    }
+    
+    return color;
 }
 
 bool occluded(struct Ray ray,

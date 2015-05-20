@@ -42,7 +42,7 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
 
     for(auto n : scene_file["materials"]) {
         Material mat;
-        auto diffuse = load_texture(n["diffuse"].as<std::string>());
+        auto diffuse = load_texture("../textures/" + n["diffuse"].as<std::string>());
         scene.texture_array.insert(scene.texture_array.end(),
                                    diffuse.begin(),
                                    diffuse.end());
@@ -58,6 +58,7 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
         clmesh.material = n["material"].as<cl_int>();
         clmesh.position = n["position"].as<cl_float3>();
         clmesh.scale = n["scale"].as<cl_float3>();
+        clmesh.orientation = n["orientation"].as<Quaternion>();
         clmesh.base_vertex = scene.vertices.size();
         clmesh.base_triangle = scene.indices.size();
 
@@ -85,19 +86,14 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
     scene.materialsBuffer = cl::Buffer(context, scene.materials.begin(), 
                                        scene.materials.end(), true);
     auto format = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
-    scene.texturesBuffer = cl::Image2DArray(context, CL_MEM_READ_ONLY,
+    scene.texturesBuffer = cl::Image2DArray(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                             format, (size_t)scene_file["materials"].size(),
                                             512, 512, 0, 0, scene.texture_array.data());
 
-    std::cout << "texture size:" 
-              << (scene.texturesBuffer.getImageInfo<CL_IMAGE_FORMAT>().image_channel_data_type == CL_UNSIGNED_INT8)
+    std::cout << "texture array size:"
+              << scene.texture_array.size()
               << std::endl;
-
-    cl::size_t<3> ori;
-    ori[0] = 0; ori[1] = 0; ori[2] = 0;
-    cl::size_t<3> sz;
-    sz[0] = 512; sz[1] = 512; sz[2] = 1;
-            
+  
     scene.vertexBuffer = cl::Buffer(context, scene.vertices.begin(),
                                     scene.vertices.end(), true);
     scene.vertexAttributesBuffer = cl::Buffer(context, scene.vertexAttributes.begin(),
@@ -126,13 +122,26 @@ namespace YAML {
     template<>
     struct convert<cl_float3> {
         static bool decode(const Node& node, cl_float3& f3) {
-            if (node.size() != 3) {
+            if (node.size() != 3)
                 return false;
-            }
 
             f3.x = node[0].as<cl_float>();
             f3.y = node[1].as<cl_float>();
             f3.z = node[2].as<cl_float>();
+            return true;
+        }
+    };
+
+    template<>
+    struct convert<Quaternion> {
+        static bool decode(const Node& node, Quaternion& q) {
+            if (node.size() != 4)
+                return false;
+
+            q.x = node[0].as<cl_float>();
+            q.y = node[1].as<cl_float>();
+            q.z = node[2].as<cl_float>();
+            q.w = node[3].as<cl_float>();
             return true;
         }
     };
