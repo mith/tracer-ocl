@@ -17,6 +17,8 @@
 #include <tuple>
 #include <algorithm>
 
+#include <boost/algorithm/string/trim.hpp>
+
 #include "yaml-cpp/yaml.h"
 #include "cl.hpp"
 #include "Tracer.hpp"
@@ -140,7 +142,8 @@ int main()
 
     auto window = init_gl(width, height);
 
-    std::string device_name = config["compute_device"].as<std::string>();
+    std::string device_name = boost::algorithm::trim_copy(file_to_str("../device"));
+    std::cout << "configured device name: " << device_name << std::endl;
 
     cl::Context context;
     cl::Device device;

@@ -53,4 +53,5 @@ public:
     void trace();
 };
 
+std::string file_to_str (std::string filename);
 void CL_CALLBACK contextCallback(const char*, const void*, size_t, void*);
