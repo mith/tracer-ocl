@@ -16,8 +16,6 @@
 #include <vector>
 #include <array>
 
-#include <glm/gtc/quaternion.hpp>
-
 struct Light {
     cl_float3 color;
     cl_float3 location;

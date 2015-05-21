@@ -6,7 +6,6 @@
 
 #include "lodepng.h"
 
-#include <glm/gtc/quaternion.hpp>
 #include <cmath>
 
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
@@ -92,10 +91,6 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
                                             format, (size_t)scene_file["materials"].size(),
                                             512, 512, 0, 0, scene.texture_array.data());
 
-    std::cout << "texture array size:"
-              << scene.texture_array.size()
-              << std::endl;
-  
     scene.vertexBuffer = cl::Buffer(context, scene.vertices.begin(),
                                     scene.vertices.end(), true);
     scene.vertexAttributesBuffer = cl::Buffer(context, scene.vertexAttributes.begin(),
@@ -106,8 +101,6 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
                                     scene.clmeshes.end(), true);
     scene.bvhBuffer = cl::Buffer(context, scene.bvh.begin(),
                                  scene.bvh.end(), true);
-    std::cout << "created clbuffers" << std::endl;
-
     return scene;
 }
 
@@ -115,8 +108,7 @@ std::vector<unsigned char> load_texture(const std::string & filename)
 {
     std::vector<unsigned char> pixels;
     unsigned int width, height;
-    unsigned int error =
-        lodepng::decode(pixels, width, height, filename.c_str());
+    lodepng::decode(pixels, width, height, filename.c_str());
     return pixels;
 }
 
