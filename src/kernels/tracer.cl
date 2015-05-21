@@ -80,9 +80,9 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
             nearestHit.location = loc;
             nearestHit.normal = normalize(rotate_quat(mesh.orientation, normal));
             float3 bc = barycentric(loc, triangle);
-            nearestHit.texcoord = (bc.x * triangle.aa->texcoord
-                                 + bc.y * triangle.ba->texcoord
-                                 + bc.z * triangle.ca->texcoord).xy;
+            nearestHit.texcoord = (uv.x * triangle.aa->texcoord
+                                 + uv.y * triangle.ba->texcoord
+                                 + uv.z * triangle.ca->texcoord).xy;
             nearestHit.material = mesh.material;
             nearestHit.mesh = &meshes[numMesh];
             nearestHit.indice = &indices[p];
