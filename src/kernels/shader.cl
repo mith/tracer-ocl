@@ -26,7 +26,7 @@ float3 shade(float3 normal, float3 view,
     return clamp(color_add, 0.0f, 1.0f);
 }
 
-__constant sampler_t sampler = CLK_FILTER_NEAREST 
+__constant sampler_t sampler = CLK_FILTER_LINEAR 
                              | CLK_NORMALIZED_COORDS_TRUE
                              | CLK_ADDRESS_CLAMP_TO_EDGE;
 

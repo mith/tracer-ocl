@@ -1,21 +1,22 @@
 meshes: 
-    - file: "cube.iqm"
-      position: [0.0, 0.0, -80.0]
-      scale: [1.5, 1.5, 1.5]
-      orientation: [0.0, 0.8509, 0.0, 0.5253]
+    - file: "sphere.iqm"
+      position: [0.0, -10.0, -100.0]
+      scale: [30.5, 30.5, 30.0]
+      orientation: [0.0, -0.7071045443232221, 0.0, 0.0]
       material: 0
     - file: "cornell.iqm"
-      position: [0.0, 0.0, -50.0]
-      scale: [20.0, 20.0, 20.0]
+      position: [0.0, 0.0, -140.0]
+      orientation: [0.0, -0.7071045443232221, 0.0, 0.7071090180427968]
+      scale: [85.0, 65.0, 65.0]
       material: 1
 
 lights:
     - color: [3.0, 3.0, 3.0]
-      location: [0.0, 30.0, -70.0]
+      location: [0.0, 10.0, -70.0]
       radius: 120
 
 materials:
-    - diffuse: "uvgrid.png"
+    - diffuse: "sphere_diffuse.png"
       fresnel0: 0.04
       roughness: 0.1
     - diffuse: "cornell_diffuse.png"

@@ -32,11 +32,12 @@ class Tracer {
     int group_size;
 
     const std::string kernels_dir = "../src/kernels/";
-    const std::array<std::string, 5> kernel_filenames = { { "tracer.cl",
+    const std::array<std::string, 6> kernel_filenames = { { "tracer.cl",
                                                             "primitives.cl",
                                                             "intersect.cl",
                                                             "brdf.cl",
-                                                            "shader.cl" } };
+                                                            "shader.cl",
+                                                            "quaternion.cl" } };
 
     cl::Program program;
     cl::Kernel tracer_krnl;

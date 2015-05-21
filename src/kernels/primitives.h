@@ -1,7 +1,7 @@
-//////
-
 #ifndef PRIMITIVES_H_
 #define PRIMITIVES_H_
+
+#include "quaternion.h"
 
 struct Ray {
     float3 origin;
@@ -43,8 +43,9 @@ struct Sphere {
     int material;
 };
 
+
 struct Mesh {
-    float4 orientation;
+    quaternion orientation;
     float3 position;
     float3 scale;
 

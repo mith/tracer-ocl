@@ -6,6 +6,7 @@
 
 #include "lodepng.h"
 
+#include <glm/gtc/quaternion.hpp>
 #include <cmath>
 
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
@@ -25,9 +26,9 @@ void Scene::update()
     //queue.enqueueWriteBuffer(spheresBuffer, CL_TRUE, 0,
     //                         sizeof(Sphere) * spheres.size(), spheres.data());
 
-    lights[0].location.x = std::cos(x - M_PI / 2) * 40;
+    lights[0].location.x = std::cos(x - M_PI / 2) * 25;
     //lights[0].location.y = std::sin(x - M_PI) * 22;
-    lights[0].location.z = -80.f - std::cos(x - M_PI) * 30;
+    lights[0].location.z = -90.f - std::cos(x - M_PI) * 25;
     //cl::copy(lights.begin(), lights.end(), lightsBuffer);
     queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
                              sizeof(Light) * lights.size(), lights.data());
@@ -46,6 +47,7 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
         scene.texture_array.insert(scene.texture_array.end(),
                                    diffuse.begin(),
                                    diffuse.end());
+        mat.diffuse = scene.materials.size();
         mat.fresnel0 = n["fresnel0"].as<float>();
         mat.roughness = n["roughness"].as<float>();
         scene.materials.push_back(mat);
@@ -58,7 +60,7 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
         clmesh.material = n["material"].as<cl_int>();
         clmesh.position = n["position"].as<cl_float3>();
         clmesh.scale = n["scale"].as<cl_float3>();
-        clmesh.orientation = n["orientation"].as<Quaternion>();
+        clmesh.orientation = n["orientation"].as<cl_float4>();
         clmesh.base_vertex = scene.vertices.size();
         clmesh.base_triangle = scene.indices.size();
 
@@ -120,29 +122,22 @@ std::vector<unsigned char> load_texture(const std::string & filename)
 
 namespace YAML {
     template<>
-    struct convert<cl_float3> {
-        static bool decode(const Node& node, cl_float3& f3) {
-            if (node.size() != 3)
+    struct convert<cl_float4> {
+        static bool decode(const Node& node, cl_float4& f4) {
+            if (node.size() == 3) {
+                f4.x = node[0].as<cl_float>();
+                f4.y = node[1].as<cl_float>();
+                f4.z = node[2].as<cl_float>();
+                return true;
+            } else if (node.size() == 4) {
+                f4.x = node[0].as<cl_float>();
+                f4.y = node[1].as<cl_float>();
+                f4.z = node[2].as<cl_float>();
+                f4.w = node[3].as<cl_float>();
+                return true;
+            } else {
                 return false;
-
-            f3.x = node[0].as<cl_float>();
-            f3.y = node[1].as<cl_float>();
-            f3.z = node[2].as<cl_float>();
-            return true;
-        }
-    };
-
-    template<>
-    struct convert<Quaternion> {
-        static bool decode(const Node& node, Quaternion& q) {
-            if (node.size() != 4)
-                return false;
-
-            q.x = node[0].as<cl_float>();
-            q.y = node[1].as<cl_float>();
-            q.z = node[2].as<cl_float>();
-            q.w = node[3].as<cl_float>();
-            return true;
+            }
         }
     };
 
