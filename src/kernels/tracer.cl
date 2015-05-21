@@ -72,17 +72,18 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
 
         if (nearestHit.dist > uvt.z && uvt.z > 0.0f) {
             float3 loc = rayPoint(ray, uvt.z);
-            float2 uv = uvt.xy;
-            float3 normal = uv.x * triangle.ba->normal 
-                          + uv.y * triangle.ca->normal
-                          + (1.0f - uv.x - uv.y) * triangle.aa->normal;
+            float3 uvw = (float3)(1.0f - uvt.x - uvt.y,
+                                 uvt.x,
+                                 uvt.y);
+            float3 normal = uvw.x * triangle.aa->normal 
+                          + uvw.y * triangle.ba->normal
+                          + uvw.z * triangle.ca->normal;
             nearestHit.dist = uvt.z;
             nearestHit.location = loc;
             nearestHit.normal = normalize(rotate_quat(mesh.orientation, normal));
-            float3 bc = barycentric(loc, triangle);
-            nearestHit.texcoord = (uv.x * triangle.aa->texcoord
-                                 + uv.y * triangle.ba->texcoord
-                                 + uv.z * triangle.ca->texcoord).xy;
+            nearestHit.texcoord = (uvw.x * triangle.aa->texcoord
+                                 + uvw.y * triangle.ba->texcoord
+                                 + uvw.z * triangle.ca->texcoord).xy;
             nearestHit.material = mesh.material;
             nearestHit.mesh = &meshes[numMesh];
             nearestHit.indice = &indices[p];
