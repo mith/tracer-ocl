@@ -48,12 +48,7 @@ struct VertexAttributes {
     {}
 };
 
-struct Indice {
-    cl_uint3 i;
-
-    Indice (std::array<unsigned int, 3> i)
-        : i{{i[0], i[1], i[2]}} {}
-};
+typedef cl_uint Indice;
 
 struct AABB {
     cl_float3 min;

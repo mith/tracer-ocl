@@ -12,6 +12,8 @@
 #include <CL/cl_platform.h>
 #endif
 
+#include <glad/glad.h>
+
 #include "cl.hpp"
 
 #include <array>
@@ -20,12 +22,6 @@
 #include "Primitives.hpp"
 
 class Scene {
-    cl::Context context;
-    cl::Device device;
-    cl::CommandQueue queue;
-
-    Scene(cl::Context context, cl::Device device, cl::CommandQueue queue);
-
 public:
     std::vector<Vertex> vertices;
     std::vector<VertexAttributes> vertexAttributes;
@@ -37,18 +33,39 @@ public:
     std::vector<Material> materials;
     std::vector<unsigned char> diffuse_array;
 
-    cl::Buffer lightsBuffer;
-    cl::Buffer materialsBuffer;
-    cl::Image2DArray diffuseBuffer;
-    cl::Buffer vertexBuffer;
-    cl::Buffer vertexAttributesBuffer;
-    cl::Buffer indicesBuffer;
-    cl::Buffer meshesBuffer;
-    cl::Buffer bvhBuffer;
+    struct GLView {
+        GLuint vertexBuffer;
+        GLuint vertexAttributesBuffer;
+        GLuint indicesBuffer;
+    };
+
+    GLView glview;
+
+    struct CLView {
+        cl::Buffer lightsBuffer;
+        cl::Buffer materialsBuffer;
+        cl::Image2DArray diffuseBuffer;
+        cl::Buffer vertexBuffer;
+        cl::Buffer vertexAttributesBuffer;
+        cl::Buffer indicesBuffer;
+        cl::Buffer meshesBuffer;
+        cl::Buffer bvhBuffer;
+    };
+
+    CLView clview;
 
     static Scene load(const std::string & filename, cl::Context context, 
                 cl::Device device, cl::CommandQueue queue);
     void update();
+
+private:
+    cl::Context context;
+    cl::Device device;
+    cl::CommandQueue queue;
+
+    Scene(cl::Context context, cl::Device device, cl::CommandQueue queue);
+    void init_clview();
+    void init_glview();
 };
 
 std::vector<unsigned char> load_texture(const std::string & filename);

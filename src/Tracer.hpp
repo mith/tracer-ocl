@@ -12,45 +12,33 @@
 #endif
 
 #include <glad/glad.h>
-#include <iostream>
-#include <vector>
+#include <array>
+#include <string>
 
 #include "cl.hpp"
 
 #include "Scene.hpp"
-
-struct Ray {
-    cl_float3 origin;
-    cl_float3 direction;
-};
+#include "Renderer.hpp"
 
 class Tracer {
 public:
-    enum display_options {
-        shaded,
-        unlit,
-        normals,
-        texcoords,
-        depth,
-    };
-
-    struct tracer_options {
+    struct options {
         display_options display_options;
         bool shadows;
 
-        bool operator!=(const tracer_options& o) {
+        bool operator!=(const options& o) {
             return display_options != o.display_options
                 || shadows != o.shadows;
         }
     };
 
     Tracer(cl::Context, cl::Device, cl::CommandQueue);
-    void load_kernels(tracer_options options);
+    void load_kernels(options& options);
     void set_texture(GLuint texid, int width, int height);
     void set_scene(const Scene& scene);
-    void set_options(tracer_options dspo);
+    void set_options(options& options);
     void reload_kernels();
-    void trace();
+    void render();
 
 private:
     cl::Context context;
@@ -72,11 +60,11 @@ private:
     cl::Program program;
     cl::Kernel tracer_krnl;
 
-    cl::ImageGL tex;
+    cl::ImageGL target_texture;
     int width;
     int height;
 
-    tracer_options current_options;
+    options current_options;
 
     void set_tracer_kernel_args();
 };

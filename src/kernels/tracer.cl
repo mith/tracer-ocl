@@ -57,7 +57,7 @@ float3 barycentric(float3 loc, struct Triangle triangle)
 struct RayHit traceRayAgainstMesh(struct Ray ray,
                                   global const struct Vertex* vertices,
                                   global const struct VertexAttributes* vertexAttributes,
-                                  global const struct Indices* indices,
+                                  global const Indice* indices,
                                   global const struct Mesh* meshes,
                                   int numMesh)
 {
@@ -65,7 +65,7 @@ struct RayHit traceRayAgainstMesh(struct Ray ray,
     nearestHit.dist = (float)(INFINITY);
 
     struct Mesh mesh = meshes[numMesh];
-    for (int p = 0; p < mesh.num_triangles; p++) {
+    for (int p = 0; p < mesh.num_triangles; p += 3) {
         struct Triangle triangle = constructTriangle(vertices, vertexAttributes,
                                                      indices, p, mesh);
         float3 uvt = intersectTriangle(ray, triangle);
@@ -97,7 +97,7 @@ struct RayHit traceRayAgainstBVH(struct Ray ray,
                                  int numBVHNodes,
                                  global const struct Vertex* vertices,
                                  global const struct VertexAttributes* vertexAttributes,
-                                 global const struct Indices* indices,
+                                 global const Indice* indices,
                                  global const struct Mesh* meshes,
                                  int numMeshes)
 {
@@ -127,7 +127,7 @@ void kernel tracer(write_only image2d_t img,
                    int numLights,
                    global const struct Vertex* vertices,
                    global const struct VertexAttributes* vertexAttributes,
-                   global const struct Indices* indices,
+                   global const Indice* indices,
                    global const struct Mesh* meshes,
                    int numMeshes,
                    global const struct BVHNode* bvh,

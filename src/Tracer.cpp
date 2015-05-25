@@ -5,6 +5,7 @@
 #endif
 
 #include <cmath>
+#include <iostream>
 #include "Utils.hpp"
 
 Tracer::Tracer(cl::Context context, cl::Device device, cl::CommandQueue queue)
@@ -26,7 +27,7 @@ void CL_CALLBACK contextCallback(
     std::cerr << errInfo << std::endl;
 }
 
-void Tracer::load_kernels(tracer_options options)
+void Tracer::load_kernels(Tracer::options & options)
 {
     cl::Program::Sources sources;
 
@@ -80,7 +81,7 @@ void Tracer::set_scene(const Scene& scene)
     set_tracer_kernel_args();
 }
 
-void Tracer::set_options(tracer_options options)
+void Tracer::set_options(Tracer::options& options)
 {
     if (options != current_options) {
         current_options = options;
@@ -92,25 +93,25 @@ void Tracer::reload_kernels()
 {
     load_kernels(current_options);
     set_tracer_kernel_args();
-    tracer_krnl.setArg(0, tex);
+    tracer_krnl.setArg(0, target_texture);
 }
 
 void Tracer::set_tracer_kernel_args()
 {    
-    tracer_krnl.setArg(1, current_scene->lightsBuffer);
+    tracer_krnl.setArg(1, current_scene->clview.lightsBuffer);
     tracer_krnl.setArg(2, (cl_int)current_scene->lights.size());
 
-    tracer_krnl.setArg(3, current_scene->vertexBuffer);
-    tracer_krnl.setArg(4, current_scene->vertexAttributesBuffer);
-    tracer_krnl.setArg(5, current_scene->indicesBuffer);
-    tracer_krnl.setArg(6, current_scene->meshesBuffer);
+    tracer_krnl.setArg(3, current_scene->clview.vertexBuffer);
+    tracer_krnl.setArg(4, current_scene->clview.vertexAttributesBuffer);
+    tracer_krnl.setArg(5, current_scene->clview.indicesBuffer);
+    tracer_krnl.setArg(6, current_scene->clview.meshesBuffer);
     tracer_krnl.setArg(7, (cl_int)current_scene->clmeshes.size());
 
-    tracer_krnl.setArg(8, current_scene->bvhBuffer);
+    tracer_krnl.setArg(8, current_scene->clview.bvhBuffer);
     tracer_krnl.setArg(9, (cl_int)current_scene->bvh.size());
 
-    tracer_krnl.setArg(10, current_scene->materialsBuffer);
-    tracer_krnl.setArg(11, current_scene->diffuseBuffer);
+    tracer_krnl.setArg(10, current_scene->clview.materialsBuffer);
+    tracer_krnl.setArg(11, current_scene->clview.diffuseBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)
@@ -118,12 +119,12 @@ void Tracer::set_texture(GLuint texid, int width, int height)
     try {
         this->width = width;
         this->height = height;
-        tex = cl::ImageGL(context,
+        target_texture = cl::ImageGL(context,
                           CL_MEM_WRITE_ONLY,
                           GL_TEXTURE_2D,
                           0,
                           texid);
-        tracer_krnl.setArg(0, tex);
+        tracer_krnl.setArg(0, target_texture);
     } catch (cl::Error err) {
         std::cerr << "Error setting texture kernel arg, "
                   << err.what()
@@ -132,9 +133,9 @@ void Tracer::set_texture(GLuint texid, int width, int height)
     }
 }
 
-void Tracer::trace()
+void Tracer::render()
 {
-    std::vector<cl::Memory> mem_objs = {tex};
+    std::vector<cl::Memory> mem_objs = {target_texture};
     glFlush();
     queue.enqueueAcquireGLObjects(&mem_objs, nullptr);
     queue.enqueueNDRangeKernel(tracer_krnl, cl::NullRange,

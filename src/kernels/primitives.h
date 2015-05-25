@@ -3,6 +3,8 @@
 
 #include "quaternion.h"
 
+typedef uint Indice;
+
 struct Ray {
     float3 origin;
     float3 direction;
@@ -16,7 +18,7 @@ struct RayHit {
     float dist;
     int material;
     global const struct Mesh* mesh;
-    global const struct Indices* indice;
+    global const Indice* indice;
 };
 
 struct Light {
@@ -65,9 +67,6 @@ struct VertexAttributes {
     float2 texcoord;
 };
 
-struct Indices {
-    uint3 vertex;
-};
 
 struct Triangle {
     struct Vertex a;
@@ -93,7 +92,7 @@ struct BVHNode {
 struct Geometry {
     global const struct Vertex* vertices;
     global const struct VertexAttributes* vertexAttributes;
-    global const struct Indices* indices;
+    global const Indice* indices;
     global const struct Mesh* meshes;
     int numMeshes;
     global const struct BVHNode* bvh;
@@ -102,7 +101,7 @@ struct Geometry {
 
 struct Triangle constructTriangle(global const struct Vertex* vertices,
                                   global const struct VertexAttributes* vertexAttributes,
-                                  global const struct Indices* indices,
+                                  global const Indice* indices,
                                   int numTriangle,
                                   struct Mesh);
 

@@ -77,7 +77,7 @@ float3 gatherLight(struct Ray ray,
 
 bool occluded(struct Ray ray,
               float targetDistance,
-              global const struct Indices* ignoredIndices,
+              global const Indice* ignoredIndices,
               const struct Geometry* geometry)
 {
 #ifndef NOSHADOWS
@@ -92,7 +92,7 @@ bool occluded(struct Ray ray,
         if (intersectAABB(ray, bvhnode.bounds)) {
      
             struct Mesh mesh = geometry->meshes[b];
-            for (int p = 0; p < mesh.num_triangles; p++) {
+            for (int p = 0; p < mesh.num_triangles; p += 3) {
                 if (&geometry->indices[p] == ignoredIndices)
                     continue;
 

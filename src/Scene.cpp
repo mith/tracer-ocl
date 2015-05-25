@@ -31,12 +31,12 @@ void Scene::update()
     //lights[0].location.y = std::sin(x - M_PI) * 22;
     lights[0].location.z = -90.f - std::cos(x - M_PI) * 25;
     //cl::copy(lights.begin(), lights.end(), lightsBuffer);
-    queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
-                             sizeof(Light) * lights.size(), lights.data());
-    clmeshes[0].orientation = 
-        glm::angleAxis((float)std::sin(x - M_PI) * 2, glm::vec3(0.0f, 1.0f, 0.0f));
-    queue.enqueueWriteBuffer(meshesBuffer, CL_TRUE, 0,
-                             sizeof(CLMesh) * clmeshes.size(), clmeshes.data());
+    //queue.enqueueWriteBuffer(clview.lightsBuffer, CL_TRUE, 0,
+    //                         sizeof(Light) * lights.size(), lights.data());
+    //clmeshes[0].orientation = 
+    //    glm::angleAxis((float)std::sin(x - M_PI) * 2, glm::vec3(0.0f, 1.0f, 0.0f));
+    //queue.enqueueWriteBuffer(clview.meshesBuffer, CL_TRUE, 0,
+    //                         sizeof(CLMesh) * clmeshes.size(), clmeshes.data());
 }
 
 Scene Scene::load(const std::string & filename, cl::Context context, cl::Device device, cl::CommandQueue queue)
@@ -88,26 +88,50 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
         scene.bvh.push_back(bvhnode);
     }
 
-    scene.lightsBuffer = cl::Buffer(context, scene.lights.begin(), 
-                                    scene.lights.end(), true);
-    scene.materialsBuffer = cl::Buffer(context, scene.materials.begin(), 
-                                       scene.materials.end(), true);
-    auto format = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
-    scene.diffuseBuffer = cl::Image2DArray(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                                            format, (size_t)scene_file["materials"].size(),
-                                            512, 512, 0, 0, scene.diffuse_array.data());
+    scene.init_glview();
+    scene.init_clview();
 
-    scene.vertexBuffer = cl::Buffer(context, scene.vertices.begin(),
-                                    scene.vertices.end(), true);
-    scene.vertexAttributesBuffer = cl::Buffer(context, scene.vertexAttributes.begin(),
-                                              scene.vertexAttributes.end(), true);
-    scene.indicesBuffer = cl::Buffer(context, scene.indices.begin(),
-                                     scene.indices.end(), true);
-    scene.meshesBuffer = cl::Buffer(context, scene.clmeshes.begin(),
-                                    scene.clmeshes.end(), true);
-    scene.bvhBuffer = cl::Buffer(context, scene.bvh.begin(),
-                                 scene.bvh.end(), true);
     return scene;
+}
+
+void Scene::init_glview()
+{
+    glGenBuffers(1, &glview.vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, glview.vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), 
+                 vertices.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &glview.vertexAttributesBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, glview.vertexAttributesBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexAttributes) * vertexAttributes.size(),
+                 vertexAttributes.data(), GL_STATIC_DRAW);
+    
+    glGenBuffers(1, &glview.indicesBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, glview.indicesBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Indice) * indices.size(),
+                 indices.data(), GL_STATIC_DRAW);
+}
+
+void Scene::init_clview()
+{
+    clview.lightsBuffer = cl::Buffer(context, lights.begin(), 
+                                    lights.end(), true);
+    clview.materialsBuffer = cl::Buffer(context, materials.begin(), 
+                                       materials.end(), true);
+    auto format = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
+    clview.diffuseBuffer = cl::Image2DArray(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                                            format, materials.size(),
+                                            512, 512, 0, 0, diffuse_array.data());
+
+    clview.vertexBuffer = cl::BufferGL(context, CL_MEM_READ_ONLY, glview.vertexBuffer);
+    clview.vertexAttributesBuffer = cl::BufferGL(context, CL_MEM_READ_ONLY, 
+                                                 glview.vertexAttributesBuffer);
+    clview.indicesBuffer = cl::BufferGL(context, CL_MEM_READ_ONLY,
+                                        glview.indicesBuffer);
+    clview.meshesBuffer = cl::Buffer(context, clmeshes.begin(),
+                                    clmeshes.end(), true);
+    clview.bvhBuffer = cl::Buffer(context, bvh.begin(),
+                                 bvh.end(), true);
 }
 
 std::vector<unsigned char> load_texture(const std::string & filename)

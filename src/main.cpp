@@ -18,6 +18,7 @@
 #include <deque>
 #include <algorithm>
 #include <functional>
+#include <iostream>
 
 #include <boost/algorithm/string/trim.hpp>
 
@@ -25,6 +26,7 @@
 #include "cl.hpp"
 #include "Utils.hpp"
 #include "Tracer.hpp"
+#include "Rasterizer.hpp"
 #include "Scene.hpp"
 #include "Drawer.hpp"
 
@@ -156,6 +158,7 @@ int main()
     cl::CommandQueue queue;
     std::tie(context, device, queue) = init_cl(device_name, window);
     Tracer tracer(context, device, queue);
+    Rasterizer rasterizer;
 
     Drawer drawer(width, height);
 
@@ -164,8 +167,8 @@ int main()
     auto scene = Scene::load("../scenes/" + scene_file, context, device, queue);
     const char* display_options = "shaded\0unlit\0normals\0texcoords\0depth\0\0";
 
-    Tracer::tracer_options current_options = {
-        Tracer::shaded,
+    Tracer::options current_options = {
+        shaded,
         true
     };
 
@@ -173,6 +176,9 @@ int main()
     tracer.load_kernels(current_options);
     tracer.set_scene(scene);
     tracer.set_texture(drawer.texture(), width, height);
+
+    rasterizer.set_scene(scene);
+    rasterizer.set_texture(drawer.texture(), width, height);
 
     ImGui_ImplGlfwGL3_Init(window, true);
     bool infoWindow = 0;
@@ -187,6 +193,8 @@ int main()
         std::deque<float>* q = (std::deque<float>*)dt;
         return (*q)[i];
     };
+
+    int renderer = 0;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -204,16 +212,21 @@ int main()
                          0, nullptr, 0.0f, 100.0f, ImVec2(150.0f, 100.0f)); 
         ImGui::End();
         ImGui::Begin("Controls", &controlsWindow);
+        ImGui::Combo("Renderer", &renderer, "Raytracer\0Rasterizer\0\0");
         if (ImGui::Button("Reload kernels")) {
             tracer.reload_kernels();
         }
         ImGui::Combo("Display", (int*)&current_options.display_options, display_options); 
-        if (current_options.display_options == Tracer::shaded) {
+        if (current_options.display_options == shaded) {
             ImGui::Checkbox("Shadows", &current_options.shadows);
         }
         ImGui::End();
+
         scene.update();
-        tracer.trace();
+        switch(renderer){
+            case 0: tracer.render(); break;
+            case 1: rasterizer.render(); break;
+        }
         drawer.display();
         ImGui::Render();
         glfwSwapBuffers(window);

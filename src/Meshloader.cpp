@@ -15,14 +15,6 @@ std::ostream& operator<<(std::ostream& strm, const Vertex& v)
 
 }
 
-std::ostream& operator<<(std::ostream& strm, const Indice& t)
-{
-    return strm << "("
-                << t.i.x << ", "
-                << t.i.y << ", "
-                << t.i.z << ")";
-}
-
 Mesh load_mesh(std::string filename)
 {
     using namespace boost::iostreams;
@@ -66,8 +58,8 @@ Mesh load_mesh(std::string filename)
         mesh.vertexAttributes.emplace_back(nor, tc);
     }
 
-    auto triangles = reinterpret_cast<const std::array<unsigned int, 3>*>(mesh_file.data() + ih->ofs_triangles);
-    for(unsigned int i = 0; i < ih->num_triangles; i++) {
+    auto triangles = reinterpret_cast<const unsigned int*>(mesh_file.data() + ih->ofs_triangles);
+    for(unsigned int i = 0; i < ih->num_triangles * 3; i++) {
         auto t = triangles[i];
         mesh.indices.emplace_back(t);
     }

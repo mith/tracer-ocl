@@ -2,11 +2,15 @@
 
 struct Triangle constructTriangle(global const struct Vertex* vertices,
                                   global const struct VertexAttributes* vertexAttributes,
-                                  global const struct Indices* indices,
+                                  global const Indice* indices,
                                   int numTriangle,
                                   struct Mesh mesh)
 {
-    uint3 i = indices[numTriangle + mesh.base_triangle].vertex;
+    int offset = (numTriangle + mesh.base_triangle);
+    uint3 i = (uint3)(indices[offset],
+                      indices[offset + 1],
+                      indices[offset + 2]);
+
     struct Triangle triangle;
     triangle.a.position = rotate_quat(mesh.orientation, vertices[i.x + mesh.base_vertex].position) 
                         *  mesh.scale + mesh.position;

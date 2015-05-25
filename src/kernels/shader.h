@@ -16,6 +16,6 @@ float3 gatherLight(struct Ray ray,
                    read_only image2d_array_t diffuse);
 bool occluded(struct Ray ray,
               float targetDistance,
-              global const struct Indices* ignoredIndices,
+              global const Indice* ignoredIndices,
               const struct Geometry* geometry);
 #endif
