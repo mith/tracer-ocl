@@ -1,5 +1,3 @@
-/////
-
 #include "primitives.h"
 
 struct Ray createCameraRay(int2 coord);

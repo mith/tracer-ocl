@@ -5,6 +5,8 @@
 #include "yaml-cpp/yaml.h"
 
 #include "lodepng.h"
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <cmath>
 
@@ -31,6 +33,10 @@ void Scene::update()
     //cl::copy(lights.begin(), lights.end(), lightsBuffer);
     queue.enqueueWriteBuffer(lightsBuffer, CL_TRUE, 0,
                              sizeof(Light) * lights.size(), lights.data());
+    clmeshes[0].orientation = 
+        glm::angleAxis((float)std::sin(x - M_PI) * 2, glm::vec3(0.0f, 1.0f, 0.0f));
+    queue.enqueueWriteBuffer(meshesBuffer, CL_TRUE, 0,
+                             sizeof(CLMesh) * clmeshes.size(), clmeshes.data());
 }
 
 Scene Scene::load(const std::string & filename, cl::Context context, cl::Device device, cl::CommandQueue queue)
@@ -43,7 +49,7 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
     for(auto n : scene_file["materials"]) {
         Material mat;
         auto diffuse = load_texture("../textures/" + n["diffuse"].as<std::string>());
-        scene.texture_array.insert(scene.texture_array.end(),
+        scene.diffuse_array.insert(scene.diffuse_array.end(),
                                    diffuse.begin(),
                                    diffuse.end());
         mat.diffuse = scene.materials.size();
@@ -59,7 +65,7 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
         clmesh.material = n["material"].as<cl_int>();
         clmesh.position = n["position"].as<cl_float3>();
         clmesh.scale = n["scale"].as<cl_float3>();
-        clmesh.orientation = n["orientation"].as<cl_float4>();
+        clmesh.orientation = n["orientation"].as<glm::quat>();
         clmesh.base_vertex = scene.vertices.size();
         clmesh.base_triangle = scene.indices.size();
 
@@ -87,9 +93,9 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
     scene.materialsBuffer = cl::Buffer(context, scene.materials.begin(), 
                                        scene.materials.end(), true);
     auto format = cl::ImageFormat(CL_RGBA, CL_UNSIGNED_INT8);
-    scene.texturesBuffer = cl::Image2DArray(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+    scene.diffuseBuffer = cl::Image2DArray(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                             format, (size_t)scene_file["materials"].size(),
-                                            512, 512, 0, 0, scene.texture_array.data());
+                                            512, 512, 0, 0, scene.diffuse_array.data());
 
     scene.vertexBuffer = cl::Buffer(context, scene.vertices.begin(),
                                     scene.vertices.end(), true);
@@ -143,6 +149,20 @@ namespace YAML {
             light.color = node["color"].as<cl_float3>();
             light.location = node["location"].as<cl_float3>();
             light.radius = node["radius"].as<cl_float>();
+            return true;
+        }
+    };
+
+    template<>
+    struct convert<glm::quat> {
+        static bool decode(const Node& node, glm::quat& q) {
+            if (node.size() != 4)
+                return false;
+
+            q.x = node[0].as<float>();
+            q.y = node[1].as<float>();
+            q.z = node[2].as<float>();
+            q.w = node[3].as<float>();
             return true;
         }
     };

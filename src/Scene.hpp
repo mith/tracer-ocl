@@ -35,11 +35,11 @@ public:
     std::vector<BVHNode> bvh;
     std::vector<Light> lights;
     std::vector<Material> materials;
-    std::vector<unsigned char> texture_array;
+    std::vector<unsigned char> diffuse_array;
 
     cl::Buffer lightsBuffer;
     cl::Buffer materialsBuffer;
-    cl::Image2DArray texturesBuffer;
+    cl::Image2DArray diffuseBuffer;
     cl::Buffer vertexBuffer;
     cl::Buffer vertexAttributesBuffer;
     cl::Buffer indicesBuffer;

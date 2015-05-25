@@ -13,7 +13,7 @@ file(GLOB SOURCES src/*.cpp src/*.c)
 add_executable(tracer-ocl ${SOURCES})
 set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD 14)
 set_property(TARGET tracer-ocl PROPERTY CXX_STANDARD_REQUIRED 14)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wformat=2") 
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")

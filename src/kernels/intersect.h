@@ -1,4 +1,3 @@
-///////
 #ifndef INTERSECT_H_
 #define INTERSECT_H_
 

@@ -1,8 +1,8 @@
-/////
-
 #include "tracer.h"
 #include "intersect.h"
+////
 #include "shader.h"
+#include "options.h"
 
 struct Ray createCameraRay(int2 coord)
 {
@@ -133,28 +133,36 @@ void kernel tracer(write_only image2d_t img,
                    global const struct BVHNode* bvh,
                    int numBVHNodes,
                    global const struct Material* materials,
-                   read_only image2d_array_t textures)
+                   read_only image2d_array_t diffuse)
 {
     const int2 coord = (int2)(get_global_id(0), get_global_id(1));
     struct Ray ray = createCameraRay(coord);
     struct RayHit hit = traceRayAgainstBVH(ray, bvh, numBVHNodes, vertices, 
                                                vertexAttributes, indices, meshes, numMeshes);
 
-    const struct Geometry geometry = {
-        vertices,
-        vertexAttributes,
-        indices,
-        meshes,
-        numMeshes,
-        bvh,
-        numBVHNodes
-    };
 
     float3 color = (float3)(0.0f, 0.0f, 0.0f);
     if (hit.dist > (float)(-INFINITY) && hit.dist < (float)INFINITY) {
-        //color = (hit.normal + 1.0f) * 0.5f;
+#if DISPLAY == NORMALS
+        color = (hit.normal + 1.0f) * 0.5f;
+#elif DISPLAY == TEXCOORDS
+        color = (float3)(hit.texcoord, 0.0f);
+#elif DISPLAY == DEPTH
+        float norm_depth = hit.location.z * -0.005f;
+        color = (float3)(norm_depth);
+#else
+        const struct Geometry geometry = {
+            vertices,
+            vertexAttributes,
+            indices,
+            meshes,
+            numMeshes,
+            bvh,
+            numBVHNodes
+        };
         color = gatherLight(ray, hit, &geometry,
-                            lights, numLights, materials, textures);
+                lights, numLights, materials, diffuse);
+#endif
     }
 
     write_imagef(img, coord, (float4)(color, 1.0f));

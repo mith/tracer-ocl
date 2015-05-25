@@ -22,25 +22,6 @@ class Drawer {
         2, 3, 0
     };
 
-    const std::string vertexShaderSrc = 
-        R"(#version 330
-           layout(location = 0) in vec2 position;
-           layout(location = 1) in vec2 texcoord;
-           out vec2 f_texcoord;
-           void main()
-           {
-               gl_Position = vec4(position, 0.0f, 1.0f);
-               f_texcoord = texcoord;
-           })";
-
-    const std::string fragmentShaderSrc = ("#version 330\n"
-                                           "in vec2 f_texcoord;\n"
-                                           "out vec4 outputColor;\n"
-                                           "uniform sampler2D tex;\n"
-                                           "void main() {\n"
-                                           "vec4 col = texture(tex, vec2(f_texcoord.x, -f_texcoord.y));\n"
-                                           "outputColor = col;\n"
-                                           "}\n");
 public:
     GLuint texture() { return tex; }
 

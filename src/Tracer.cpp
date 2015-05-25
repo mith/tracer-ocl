@@ -1,17 +1,17 @@
 #include "Tracer.hpp"
-#include <fstream>
-#include <boost/iostreams/device/mapped_file.hpp>
 
 #ifdef __linux__
 #include <GL/glx.h>
 #endif
 
 #include <cmath>
+#include "Utils.hpp"
 
 Tracer::Tracer(cl::Context context, cl::Device device, cl::CommandQueue queue)
     : context(context)
     , device(device)
     , queue(queue)
+    , current_scene(nullptr)
 {
     auto max_group_size = device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
     group_size = std::sqrt(max_group_size);
@@ -26,16 +26,7 @@ void CL_CALLBACK contextCallback(
     std::cerr << errInfo << std::endl;
 }
 
-std::string file_to_str (std::string filename)
-{
-    using namespace boost::iostreams;
-    mapped_file_source txt_file(filename);
-    std::string src(txt_file.data(), txt_file.size());
-    txt_file.close();
-    return src;
-}
-
-void Tracer::load_kernels()
+void Tracer::load_kernels(tracer_options options)
 {
     cl::Program::Sources sources;
 
@@ -50,33 +41,76 @@ void Tracer::load_kernels()
     }
 
     program = cl::Program(context, sources);
+    std::string options_str("-DDISPLAY=");
+    switch(options.display_options){
+        case unlit:
+            options_str.append("UNLIT");
+            break;
+        case normals:
+            options_str.append("NORMALS");
+            break;
+        case texcoords:
+            options_str.append("TEXCOORDS");
+            break;
+        case depth:
+            options_str.append("DEPTH");
+            break;
+        case shaded:
+        default:
+            options_str.append("SHADED");
+            break;
+    }
+
+    if(!options.shadows) {
+        options_str.append(" -DNOSHADOWS");
+    }
     try {
-        program.build({device}, ("-I " + kernels_dir).c_str());
+        program.build({device}, (options_str + " -cl-mad-enable -cl-std=CL1.2 -I " + kernels_dir).c_str());
     } catch (cl::Error err) {
         std::cerr << "error building: "
                   << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)
                   << std::endl;
     }
     tracer_krnl = cl::Kernel(program, "tracer");
-
 }
 
 void Tracer::set_scene(const Scene& scene)
 {
-    tracer_krnl.setArg(1, scene.lightsBuffer);
-    tracer_krnl.setArg(2, (cl_int)scene.lights.size());
+    current_scene = &scene;
+    set_tracer_kernel_args();
+}
 
-    tracer_krnl.setArg(3, scene.vertexBuffer);
-    tracer_krnl.setArg(4, scene.vertexAttributesBuffer);
-    tracer_krnl.setArg(5, scene.indicesBuffer);
-    tracer_krnl.setArg(6, scene.meshesBuffer);
-    tracer_krnl.setArg(7, (cl_int)scene.clmeshes.size());
+void Tracer::set_options(tracer_options options)
+{
+    if (options != current_options) {
+        current_options = options;
+        reload_kernels();
+    }
+}
 
-    tracer_krnl.setArg(8, scene.bvhBuffer);
-    tracer_krnl.setArg(9, (cl_int)scene.bvh.size());
+void Tracer::reload_kernels()
+{
+    load_kernels(current_options);
+    set_tracer_kernel_args();
+    tracer_krnl.setArg(0, tex);
+}
 
-    tracer_krnl.setArg(10, scene.materialsBuffer);
-    tracer_krnl.setArg(11, scene.texturesBuffer);
+void Tracer::set_tracer_kernel_args()
+{    
+    tracer_krnl.setArg(1, current_scene->lightsBuffer);
+    tracer_krnl.setArg(2, (cl_int)current_scene->lights.size());
+
+    tracer_krnl.setArg(3, current_scene->vertexBuffer);
+    tracer_krnl.setArg(4, current_scene->vertexAttributesBuffer);
+    tracer_krnl.setArg(5, current_scene->indicesBuffer);
+    tracer_krnl.setArg(6, current_scene->meshesBuffer);
+    tracer_krnl.setArg(7, (cl_int)current_scene->clmeshes.size());
+
+    tracer_krnl.setArg(8, current_scene->bvhBuffer);
+    tracer_krnl.setArg(9, (cl_int)current_scene->bvh.size());
+
+    tracer_krnl.setArg(10, current_scene->materialsBuffer);
+    tracer_krnl.setArg(11, current_scene->diffuseBuffer);
 }
 
 void Tracer::set_texture(GLuint texid, int width, int height)

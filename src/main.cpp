@@ -15,18 +15,24 @@
 #endif
 
 #include <tuple>
+#include <deque>
 #include <algorithm>
+#include <functional>
 
 #include <boost/algorithm/string/trim.hpp>
 
 #include "yaml-cpp/yaml.h"
 #include "cl.hpp"
+#include "Utils.hpp"
 #include "Tracer.hpp"
 #include "Scene.hpp"
 #include "Drawer.hpp"
 
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+
+#include <imgui.h>
+#include "imgui_impl_glfw_gl3.hpp"
 
 void glfw_error(int error, const char* description)
 {
@@ -156,18 +162,64 @@ int main()
     auto scene_file = config["scene"].as<std::string>();
 
     auto scene = Scene::load("../scenes/" + scene_file, context, device, queue);
-    tracer.load_kernels();
+    const char* display_options = "shaded\0unlit\0normals\0texcoords\0depth\0\0";
+
+    Tracer::tracer_options current_options = {
+        Tracer::shaded,
+        true
+    };
+
+
+    tracer.load_kernels(current_options);
     tracer.set_scene(scene);
     tracer.set_texture(drawer.texture(), width, height);
 
+    ImGui_ImplGlfwGL3_Init(window, true);
+    bool infoWindow = 0;
+    bool controlsWindow = 0;
+    auto & gstyle = ImGui::GetStyle();
+    gstyle.WindowRounding = 0.0f;
+    ImGuiIO & imgio = ImGui::GetIO();
+    imgio.FontGlobalScale = 2.0f;
+
+    std::deque<float> frameTimes;
+    auto getTime = [](void* dt, int i){
+        std::deque<float>* q = (std::deque<float>*)dt;
+        return (*q)[i];
+    };
+
     while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        tracer.set_options(current_options);
+        ImGui_ImplGlfwGL3_NewFrame();
+        frameTimes.push_back(imgio.DeltaTime * 1000);
+        if (frameTimes.size() == 60)
+            frameTimes.pop_front();
+
+        ImGui::Begin("Info", &infoWindow);
+        ImGui::Value("FPS", imgio.Framerate);
+        ImGui::Value("Frametime(ms)", imgio.DeltaTime * 1000);
+        ImGui::PlotLines("", getTime, 
+                         &frameTimes, frameTimes.size(),
+                         0, nullptr, 0.0f, 100.0f, ImVec2(150.0f, 100.0f)); 
+        ImGui::End();
+        ImGui::Begin("Controls", &controlsWindow);
+        if (ImGui::Button("Reload kernels")) {
+            tracer.reload_kernels();
+        }
+        ImGui::Combo("Display", (int*)&current_options.display_options, display_options); 
+        if (current_options.display_options == Tracer::shaded) {
+            ImGui::Checkbox("Shadows", &current_options.shadows);
+        }
+        ImGui::End();
         scene.update();
         tracer.trace();
         drawer.display();
+        ImGui::Render();
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
+    ImGui_ImplGlfwGL3_Shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();
 

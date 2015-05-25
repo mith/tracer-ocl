@@ -2,6 +2,12 @@
 #include <cstdio>
 #include <vector>
 
+#include "imgui_impl_glfw_gl3.hpp"
+#include <imgui.h>
+
+#include "Utils.hpp"
+
+
 void gl_check_error(int line)
 {
     GLenum errorcode = glGetError();
@@ -89,8 +95,10 @@ GLuint CreateProgram(const std::vector<GLuint>& shaderList)
 
 Drawer::Drawer(int width, int height)
 {
-    shader = CreateProgram({ CreateShader(GL_VERTEX_SHADER, vertexShaderSrc),
-            CreateShader(GL_FRAGMENT_SHADER, fragmentShaderSrc) });
+    auto vertex_shader_src = file_to_str("../src/shaders/drawer.vert");
+    auto fragment_shader_src = file_to_str("../src/shaders/drawer.frag");
+    shader = CreateProgram({ CreateShader(GL_VERTEX_SHADER, vertex_shader_src),
+            CreateShader(GL_FRAGMENT_SHADER, fragment_shader_src) });
 
     glGenBuffers(1, &positionBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
@@ -102,6 +110,12 @@ Drawer::Drawer(int width, int height)
 
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4, nullptr);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4,
+            (void*)(sizeof(GLfloat) * 2));
 
     glGenTextures(1, &tex);
     glActiveTexture(GL_TEXTURE0);
@@ -117,6 +131,7 @@ Drawer::Drawer(int width, int height)
 
 void Drawer::display()
 {
+    glBindVertexArray(vao);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -124,11 +139,6 @@ void Drawer::display()
 
     glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4, nullptr);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4,
-            (void*)(sizeof(GLfloat) * 2));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObject);
 

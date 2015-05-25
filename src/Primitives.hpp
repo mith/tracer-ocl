@@ -15,6 +15,7 @@
 #include "cl.hpp"
 #include <vector>
 #include <array>
+#include <glm/gtc/quaternion.hpp>
 
 struct Light {
     cl_float3 color;
@@ -67,7 +68,7 @@ struct Mesh {
 };
 
 struct CLMesh {
-    cl_float4 orientation;
+    glm::quat orientation;
     cl_float3 position;
     cl_float3 scale;
 

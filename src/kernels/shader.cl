@@ -1,8 +1,8 @@
-////
-
+/////
 #include "shader.h"
 #include "brdf.h"
 #include "intersect.h"
+#include "options.h"
 
 float3 shade(float3 normal, float3 view,
              float3 lightDir, float3 halfVec,
@@ -36,15 +36,18 @@ float3 gatherLight(struct Ray ray,
                    global const struct Light* lights,
                    int numLights,
                    global const struct Material* materials,
-                   read_only image2d_array_t textures)
+                   read_only image2d_array_t diffuse_textures)
 {
     struct Material material = materials[hit.material];
-    float3 view = -normalize(hit.location);
-    float3 normal = hit.normal;
-    uint4 diffuse = read_imageui(textures, sampler, 
+    uint4 diffuse = read_imageui(diffuse_textures, sampler, 
                                  (float4)(hit.texcoord.x, 
                                           hit.texcoord.y, 
                                           convert_float(material.diffuse), 0.0f));
+#if DISPLAY==UNLIT
+    return convert_float3(diffuse.xyz) / 255.0f;
+#else
+    float3 view = -normalize(hit.location);
+    float3 normal = hit.normal;
     float3 color = (convert_float3(diffuse.xyz) / 255.0f) * 0.4f;
     float roughness = material.roughness;
     float fresnel0 = material.fresnel0;
@@ -69,6 +72,7 @@ float3 gatherLight(struct Ray ray,
     }
     
     return color;
+#endif
 }
 
 bool occluded(struct Ray ray,
@@ -76,6 +80,7 @@ bool occluded(struct Ray ray,
               global const struct Indices* ignoredIndices,
               const struct Geometry* geometry)
 {
+#ifndef NOSHADOWS
     for (int b = 0; b < geometry->numBVHNodes; b++) {
         struct BVHNode bvhnode = geometry->bvh[b];
         bvhnode.bounds.min = bvhnode.bounds.min
@@ -102,6 +107,6 @@ bool occluded(struct Ray ray,
             }
         }
     }
-
+#endif
     return false;
 }

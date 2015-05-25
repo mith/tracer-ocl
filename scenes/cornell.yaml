@@ -1,8 +1,8 @@
 meshes: 
     - file: "sphere.iqm"
       position: [0.0, -10.0, -100.0]
-      scale: [30.5, 30.5, 30.0]
-      orientation: [0.0, -0.7071045443232221, 0.0, 0.0]
+      scale: [20.5, 20.5, 20.5]
+      orientation: [0.0, -0.7071045443232221, 0.0, 0.707109]
       material: 0
     - file: "cornell.iqm"
       position: [0.0, 0.0, -140.0]

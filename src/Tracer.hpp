@@ -25,9 +25,39 @@ struct Ray {
 };
 
 class Tracer {
+public:
+    enum display_options {
+        shaded,
+        unlit,
+        normals,
+        texcoords,
+        depth,
+    };
+
+    struct tracer_options {
+        display_options display_options;
+        bool shadows;
+
+        bool operator!=(const tracer_options& o) {
+            return display_options != o.display_options
+                || shadows != o.shadows;
+        }
+    };
+
+    Tracer(cl::Context, cl::Device, cl::CommandQueue);
+    void load_kernels(tracer_options options);
+    void set_texture(GLuint texid, int width, int height);
+    void set_scene(const Scene& scene);
+    void set_options(tracer_options dspo);
+    void reload_kernels();
+    void trace();
+
+private:
     cl::Context context;
     cl::Device device;
     cl::CommandQueue queue;
+
+    const Scene* current_scene;
 
     int group_size;
 
@@ -46,13 +76,9 @@ class Tracer {
     int width;
     int height;
 
-public:
-    Tracer(cl::Context, cl::Device, cl::CommandQueue);
-    void load_kernels();
-    void set_texture(GLuint texid, int width, int height);
-    void set_scene(const Scene& scene);
-    void trace();
+    tracer_options current_options;
+
+    void set_tracer_kernel_args();
 };
 
-std::string file_to_str (std::string filename);
 void CL_CALLBACK contextCallback(const char*, const void*, size_t, void*);
