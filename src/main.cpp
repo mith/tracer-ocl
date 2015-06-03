@@ -111,6 +111,12 @@ std::tuple<cl::Context, cl::Device, cl::CommandQueue> init_cl(const std::string&
     return std::make_tuple(context, device, queue);
 }
 
+void gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                       GLsizei length, const GLchar* msg, const void* data)
+{
+    std::cout.write(msg, length);
+}
+
 GLFWwindow* init_gl(int width, int height)
 {
     glfwSetErrorCallback(glfw_error);
@@ -134,6 +140,15 @@ GLFWwindow* init_gl(int width, int height)
     glfwSwapInterval(1);
 
     gladLoadGL();
+
+    if (glfwExtensionSupported("GL_KHR_debug")) {
+        std::cout << "GL debug output supported" << std::endl;
+        glDebugMessageCallback(gl_debug_callback, nullptr);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE,
+                              0, nullptr, GL_TRUE);
+        glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 1,
+                             GL_DEBUG_SEVERITY_NOTIFICATION, -1, "gl_debug_callback test\n\0");
+    }
 
     glfwSetKeyCallback(window, key_callback);
     glfwSetWindowSizeCallback(window, window_resize_callback);
@@ -216,8 +231,8 @@ int main()
         if (ImGui::Button("Reload kernels")) {
             tracer.reload_kernels();
         }
-        ImGui::Combo("Display", (int*)&current_options.display_options, display_options); 
-        if (current_options.display_options == shaded) {
+        ImGui::Combo("Display", (int*)&current_options.dspo, display_options); 
+        if (current_options.dspo == shaded) {
             ImGui::Checkbox("Shadows", &current_options.shadows);
         }
         ImGui::End();

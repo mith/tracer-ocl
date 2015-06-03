@@ -6,7 +6,7 @@ class Rasterizer
 {
 public:
     struct options {
-        display_options display_options;
+        display_options dspo;
     };
 
     Rasterizer();
