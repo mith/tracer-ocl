@@ -23,11 +23,11 @@
 class Tracer {
 public:
     struct options {
-        display_options display_options;
+        display_options dspo;
         bool shadows;
 
         bool operator!=(const options& o) {
-            return display_options != o.display_options
+            return dspo != o.dspo
                 || shadows != o.shadows;
         }
     };

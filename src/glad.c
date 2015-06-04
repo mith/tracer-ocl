@@ -682,6 +682,29 @@ PFNGLTEXIMAGE2DMULTISAMPLEPROC glad_glTexImage2DMultisample;
 PFNGLGETACTIVEUNIFORMPROC glad_glGetActiveUniform;
 PFNGLFRONTFACEPROC glad_glFrontFace;
 PFNGLDELETEPROGRAMPIPELINESPROC glad_glDeleteProgramPipelines;
+int GLAD_GL_KHR_debug;
+PFNGLDEBUGMESSAGECONTROLPROC glad_glDebugMessageControl;
+PFNGLDEBUGMESSAGEINSERTPROC glad_glDebugMessageInsert;
+PFNGLDEBUGMESSAGECALLBACKPROC glad_glDebugMessageCallback;
+PFNGLGETDEBUGMESSAGELOGPROC glad_glGetDebugMessageLog;
+PFNGLPUSHDEBUGGROUPPROC glad_glPushDebugGroup;
+PFNGLPOPDEBUGGROUPPROC glad_glPopDebugGroup;
+PFNGLOBJECTLABELPROC glad_glObjectLabel;
+PFNGLGETOBJECTLABELPROC glad_glGetObjectLabel;
+PFNGLOBJECTPTRLABELPROC glad_glObjectPtrLabel;
+PFNGLGETOBJECTPTRLABELPROC glad_glGetObjectPtrLabel;
+PFNGLGETPOINTERVPROC glad_glGetPointerv;
+PFNGLDEBUGMESSAGECONTROLKHRPROC glad_glDebugMessageControlKHR;
+PFNGLDEBUGMESSAGEINSERTKHRPROC glad_glDebugMessageInsertKHR;
+PFNGLDEBUGMESSAGECALLBACKKHRPROC glad_glDebugMessageCallbackKHR;
+PFNGLGETDEBUGMESSAGELOGKHRPROC glad_glGetDebugMessageLogKHR;
+PFNGLPUSHDEBUGGROUPKHRPROC glad_glPushDebugGroupKHR;
+PFNGLPOPDEBUGGROUPKHRPROC glad_glPopDebugGroupKHR;
+PFNGLOBJECTLABELKHRPROC glad_glObjectLabelKHR;
+PFNGLGETOBJECTLABELKHRPROC glad_glGetObjectLabelKHR;
+PFNGLOBJECTPTRLABELKHRPROC glad_glObjectPtrLabelKHR;
+PFNGLGETOBJECTPTRLABELKHRPROC glad_glGetObjectPtrLabelKHR;
+PFNGLGETPOINTERVKHRPROC glad_glGetPointervKHR;
 static void load_GL_VERSION_1_0(GLADloadproc load) {
 	if(!GLAD_GL_VERSION_1_0) return;
 	glad_glCullFace = (PFNGLCULLFACEPROC)load("glCullFace");
@@ -1235,7 +1258,33 @@ static void load_GL_VERSION_4_1(GLADloadproc load) {
 	glad_glGetFloati_v = (PFNGLGETFLOATI_VPROC)load("glGetFloati_v");
 	glad_glGetDoublei_v = (PFNGLGETDOUBLEI_VPROC)load("glGetDoublei_v");
 }
+static void load_GL_KHR_debug(GLADloadproc load) {
+	if(!GLAD_GL_KHR_debug) return;
+	glad_glDebugMessageControl = (PFNGLDEBUGMESSAGECONTROLPROC)load("glDebugMessageControl");
+	glad_glDebugMessageInsert = (PFNGLDEBUGMESSAGEINSERTPROC)load("glDebugMessageInsert");
+	glad_glDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)load("glDebugMessageCallback");
+	glad_glGetDebugMessageLog = (PFNGLGETDEBUGMESSAGELOGPROC)load("glGetDebugMessageLog");
+	glad_glPushDebugGroup = (PFNGLPUSHDEBUGGROUPPROC)load("glPushDebugGroup");
+	glad_glPopDebugGroup = (PFNGLPOPDEBUGGROUPPROC)load("glPopDebugGroup");
+	glad_glObjectLabel = (PFNGLOBJECTLABELPROC)load("glObjectLabel");
+	glad_glGetObjectLabel = (PFNGLGETOBJECTLABELPROC)load("glGetObjectLabel");
+	glad_glObjectPtrLabel = (PFNGLOBJECTPTRLABELPROC)load("glObjectPtrLabel");
+	glad_glGetObjectPtrLabel = (PFNGLGETOBJECTPTRLABELPROC)load("glGetObjectPtrLabel");
+	glad_glGetPointerv = (PFNGLGETPOINTERVPROC)load("glGetPointerv");
+	glad_glDebugMessageControlKHR = (PFNGLDEBUGMESSAGECONTROLKHRPROC)load("glDebugMessageControlKHR");
+	glad_glDebugMessageInsertKHR = (PFNGLDEBUGMESSAGEINSERTKHRPROC)load("glDebugMessageInsertKHR");
+	glad_glDebugMessageCallbackKHR = (PFNGLDEBUGMESSAGECALLBACKKHRPROC)load("glDebugMessageCallbackKHR");
+	glad_glGetDebugMessageLogKHR = (PFNGLGETDEBUGMESSAGELOGKHRPROC)load("glGetDebugMessageLogKHR");
+	glad_glPushDebugGroupKHR = (PFNGLPUSHDEBUGGROUPKHRPROC)load("glPushDebugGroupKHR");
+	glad_glPopDebugGroupKHR = (PFNGLPOPDEBUGGROUPKHRPROC)load("glPopDebugGroupKHR");
+	glad_glObjectLabelKHR = (PFNGLOBJECTLABELKHRPROC)load("glObjectLabelKHR");
+	glad_glGetObjectLabelKHR = (PFNGLGETOBJECTLABELKHRPROC)load("glGetObjectLabelKHR");
+	glad_glObjectPtrLabelKHR = (PFNGLOBJECTPTRLABELKHRPROC)load("glObjectPtrLabelKHR");
+	glad_glGetObjectPtrLabelKHR = (PFNGLGETOBJECTPTRLABELKHRPROC)load("glGetObjectPtrLabelKHR");
+	glad_glGetPointervKHR = (PFNGLGETPOINTERVKHRPROC)load("glGetPointervKHR");
+}
 static void find_extensionsGL(void) {
+	GLAD_GL_KHR_debug = has_ext("GL_KHR_debug");
 }
 
 static void find_coreGL(void) {
@@ -1311,6 +1360,7 @@ int gladLoadGLLoader(GLADloadproc load) {
 	load_GL_VERSION_4_1(load);
 
 	find_extensionsGL();
+	load_GL_KHR_debug(load);
 	return GLVersion.major != 0 || GLVersion.minor != 0;
 }
 

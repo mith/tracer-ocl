@@ -43,7 +43,7 @@ void Tracer::load_kernels(Tracer::options & options)
 
     program = cl::Program(context, sources);
     std::string options_str("-DDISPLAY=");
-    switch(options.display_options){
+    switch(options.dspo){
         case unlit:
             options_str.append("UNLIT");
             break;
