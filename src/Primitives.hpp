@@ -67,11 +67,11 @@ struct CLMesh {
     cl_float3 position;
     cl_float3 scale;
 
-    cl_int num_triangles;
+    cl_int num_indices;
     cl_int material;
 
     cl_int base_vertex;
-    cl_int base_triangle;
+    cl_int base_indice;
 };
 
 struct BVHNode {

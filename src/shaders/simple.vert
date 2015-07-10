@@ -14,9 +14,10 @@ out vec2 f_texcoord;
 void main()
 {
     vec4 pos = vec4(position, 1.0f)
+             * orientation
              * vec4(scale, 1.0f) 
              + vec4(translation, 1.0f);
-    gl_Position = perspMat * pos;
+    gl_Position = pos * perspMat;
     f_normal = (vec4(normal, 1.0f) * orientation).xyz;
     f_texcoord = texcoord;
 }

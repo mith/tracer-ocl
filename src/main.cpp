@@ -209,7 +209,7 @@ int main()
         return (*q)[i];
     };
 
-    int renderer = 0;
+    int renderer = 1;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();

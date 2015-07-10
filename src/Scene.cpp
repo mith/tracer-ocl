@@ -9,6 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <cmath>
+#include <vector>
 
 Scene::Scene(cl::Context context, cl::Device device, cl::CommandQueue queue)
     : context(context)
@@ -33,10 +34,13 @@ void Scene::update()
     //cl::copy(lights.begin(), lights.end(), lightsBuffer);
     //queue.enqueueWriteBuffer(clview.lightsBuffer, CL_TRUE, 0,
     //                         sizeof(Light) * lights.size(), lights.data());
-    //clmeshes[0].orientation = 
-    //    glm::angleAxis((float)std::sin(x - M_PI) * 2, glm::vec3(0.0f, 1.0f, 0.0f));
-    //queue.enqueueWriteBuffer(clview.meshesBuffer, CL_TRUE, 0,
-    //                         sizeof(CLMesh) * clmeshes.size(), clmeshes.data());
+    clmeshes[0].orientation = 
+        glm::angleAxis((float)std::sin(x - M_PI) * 2, glm::vec3(0.0f, 1.0f, 0.0f));
+    clmeshes[1].position.z =
+        -110.0f + (float)std::sin(x - M_PI) * 20;
+
+    queue.enqueueWriteBuffer(clview.meshesBuffer, CL_TRUE, 0,
+                             sizeof(CLMesh) * clmeshes.size(), clmeshes.data());
 }
 
 Scene Scene::load(const std::string & filename, cl::Context context, cl::Device device, cl::CommandQueue queue)
@@ -61,13 +65,13 @@ Scene Scene::load(const std::string & filename, cl::Context context, cl::Device 
     for(auto n : scene_file["meshes"]) {
         Mesh mesh = load_mesh(n["file"].as<std::string>());
         CLMesh clmesh;
-        clmesh.num_triangles = mesh.indices.size();
+        clmesh.num_indices = mesh.indices.size();
         clmesh.material = n["material"].as<cl_int>();
         clmesh.position = n["position"].as<cl_float3>();
         clmesh.scale = n["scale"].as<cl_float3>();
         clmesh.orientation = n["orientation"].as<glm::quat>();
         clmesh.base_vertex = scene.vertices.size();
-        clmesh.base_triangle = scene.indices.size();
+        clmesh.base_indice = scene.indices.size();
 
         BVHNode bvhnode;
         bvhnode.bounds = mesh.bounds;
@@ -107,8 +111,8 @@ void Scene::init_glview()
                  vertexAttributes.data(), GL_STATIC_DRAW);
     
     glGenBuffers(1, &glview.indicesBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, glview.indicesBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Indice) * indices.size(),
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glview.indicesBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indice) * indices.size(),
                  indices.data(), GL_STATIC_DRAW);
 }
 

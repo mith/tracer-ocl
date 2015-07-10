@@ -6,6 +6,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <GLFW/glfw3.h>
+
 Rasterizer::Rasterizer()
     : framebuffer(0)
     , color_renderbuffer(0)
@@ -30,13 +32,13 @@ void Rasterizer::set_scene(const Scene& scene)
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, scene.glview.vertexBuffer);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4, nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
     glBindBuffer(GL_ARRAY_BUFFER, scene.glview.vertexAttributesBuffer);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 6, nullptr);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexAttributes), nullptr);
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 6, 
-                          (void*)(sizeof(GL_FLOAT) * 3));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexAttributes), 
+                          (void*)offsetof(struct VertexAttributes, texcoord));
 }
 
 void Rasterizer::set_texture(GLuint texture, int width, int height)
@@ -53,22 +55,15 @@ void Rasterizer::set_texture(GLuint texture, int width, int height)
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    if (color_renderbuffer == 0) {
-        glGenRenderbuffers(1, &color_renderbuffer);
-    }
-
-    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
-
     if (depth_renderbuffer == 0) {
         glGenRenderbuffers(1, &depth_renderbuffer);
     }
     glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-                              GL_RENDERBUFFER, color_renderbuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                               GL_RENDERBUFFER, depth_renderbuffer);
 
@@ -84,43 +79,51 @@ void Rasterizer::set_texture(GLuint texture, int width, int height)
 void Rasterizer::render()
 {
     glBindVertexArray(vao);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
     glViewport(0, 0, width, height);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CW);
     glDepthFunc(GL_LESS);
+    glDepthRange(0.0f, 1.0f);
+    glDepthMask(GL_TRUE);
 
-    glClearBufferfv(GL_COLOR, 0, &glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)[0]);
-    float depth_clear = 0.0f;
-    glClearBufferfv(GL_DEPTH, 0, &depth_clear);
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "framebuffer incomplete." << std::endl;
+    }
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearDepth(1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shader);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, current_scene->glview.indicesBuffer);
 
     auto orientationAttrib = glGetUniformLocation(shader, "orientation");
-    auto positionAttrib = glGetUniformLocation(shader, "translation");
+    auto translationAttrib = glGetUniformLocation(shader, "translation");
     auto scaleAttrib = glGetUniformLocation(shader, "scale");
     auto perspMatAttrib = glGetUniformLocation(shader, "perspMat");
 
-    auto perspMat = glm::perspective(glm::radians(50.0f), (float)width/height, 0.5f, 500.0f);
+    auto perspMat = glm::perspective(glm::radians(80.0f), (float)width/height, 0.5f, 500.0f)
+                  * glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
+                                glm::vec3(0.0f, 0.0f, -1.0f),
+                                glm::vec3(0.0f, 1.0f, 0.0f));
 
-    glUniformMatrix4fv(perspMatAttrib, 1, GL_FALSE, (GLfloat*)glm::value_ptr(perspMat));
+    glUniformMatrix4fv(perspMatAttrib, 1, GL_FALSE, glm::value_ptr(perspMat));
 
     for (auto & mesh : current_scene->clmeshes) {
         auto rotMat = glm::mat4_cast(mesh.orientation);
-        glUniformMatrix4fv(orientationAttrib, 1, GL_FALSE, (GLfloat*)glm::value_ptr(rotMat));
-        glUniform3fv(positionAttrib, 1, (GLfloat*)&mesh.position);
+        glUniformMatrix4fv(orientationAttrib, 1, GL_FALSE, glm::value_ptr(rotMat));
+        glUniform3fv(translationAttrib, 1, (GLfloat*)&mesh.position);
         glUniform3fv(scaleAttrib, 1, (GLfloat*)&mesh.scale);
-        glDrawElementsBaseVertex(GL_TRIANGLES, mesh.num_triangles,
-                                 GL_UNSIGNED_INT, (void*)mesh.base_triangle,
+        glDrawElementsBaseVertex(GL_TRIANGLES, mesh.num_indices,
+                                 GL_UNSIGNED_INT, (void*)mesh.base_indice,
                                  mesh.base_vertex);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glBindTexture(GL_TEXTURE_2D, target_texture);
-    glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, width * 2, height * 2);
 }
